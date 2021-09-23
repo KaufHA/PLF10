@@ -15,13 +15,6 @@ esphome:
 
   esp8266_restore_from_flash: true
 
-  # remove next line if renaming to something unique above
-  name_add_mac_suffix: true
-
-  # project info can be deleted
-  project:
-    name: "kauf.plf10"
-    version: "1.5"
 
 wifi:
 
@@ -45,12 +38,6 @@ wifi:
   output_power: 17
 
 
-  ap:
-    ssid: ${friendly_name} Hotspot
-    ap_timeout: 10s
-
-
-captive_portal:   # for fallback wifi hotspot
 
 logger:                               # Enable logging
 #  baud_rate: 0                       # Disable UART logging since TX pad not easily available
