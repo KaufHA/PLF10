@@ -15,10 +15,6 @@ esphome:
   esp8266_restore_from_flash: true
 
 
-  project:
-    name: "kauf.plf10"
-    version: "1.6"
-
 wifi:
 
   # **** ENTER WI-FI CREDENTIALS HERE, USING SECRETS.YAML RECOMMENDED ****
@@ -54,13 +50,6 @@ api:                                  # Enable Home Assistant API
 ota:
   # password: !secret ota_password    # optional password for OTA updates.
 
-debug:                                # outputs additional debug info when logs start
-
-
-web_server:                           # web server allows access to device with a web browser
-  # auth:                             # optional login details for web interface
-  #   username: admin
-  #   password: !secret web_server_password
 
 
 # red led, blink when not connected to wifi or Home Assistant
@@ -85,10 +74,6 @@ binary_sensor:
       then:
         switch.toggle: relay
 
-    # indicates whether plugged-in devices is running based on configurable threshold.
-  - platform: template
-    id: in_use
-    name: ${friendly_name} Device In Use
 
 
 switch:    
@@ -108,12 +93,7 @@ switch:
  
     # automatically make blue led equal relay state
     on_turn_on:
-      - if:
-          condition: # only if blue LED enabled
-            lambda: 'return (id(select_led).state == "Enabled");'
-          then:
-            switch.turn_on: blue_led
-
+      - switch.turn_on: blue_led
     on_turn_off:
       - switch.turn_off: blue_led
 
@@ -141,18 +121,6 @@ sensor:   # Power monitoring sensors output to Home Assistant
         - calibrate_linear:
             - 0.0 -> 0.0  
             - 333.8 -> 60 # value with 60W bulb.
-      on_value:   # set or clear in_use template binary sensor depending on whether power usage is over threshold
-        - if:
-            condition:
-              lambda: 'return (x >= id(threshold).state);'
-            then:
-              - binary_sensor.template.publish:
-                  id: in_use
-                  state: ON
-            else:
-              - binary_sensor.template.publish:
-                  id: in_use
-                  state: OFF
     current:
       name: ${friendly_name} Current
       unit_of_measurement: A
@@ -179,70 +147,3 @@ sensor:   # Power monitoring sensors output to Home Assistant
         - multiply: 0.001  ## convert Wh to kWh
     unit_of_measurement: kWh
 
-
-number:      # used as a threshold for whether the plugged-in devices is running.
-  - platform: template
-    name: ${friendly_name} Use Threshold
-    min_value: 1
-    max_value: 100
-    step: 1
-    initial_value: 3
-    id: threshold
-    optimistic: true     # required for changing value from home assistant
-    restore_value: true
-    on_value:
-      - if:               # set or clear in_use template binary sensor depending on whether power usage is above threshold
-          condition:
-            lambda: 'return (id(wattage).state >= x);'
-          then:
-            - binary_sensor.template.publish:
-                id: in_use
-                state: ON
-          else:
-            - binary_sensor.template.publish:
-                id: in_use
-                state: OFF
-
-
-select:
-
-    # option to disable button
-  - platform: template
-    name: "Kauf Plug Button"
-    id: select_button
-    optimistic: true
-    options:
-      - Enabled
-      - Disabled
-    initial_option: Enabled
-    restore_value: true
-    icon: mdi:circle-double
-
-
-    # option to disable blue LED
-  - platform: template
-    name: "Kauf Plug LED"
-    id: select_led
-    optimistic: true
-    options:
-      - Enabled
-      - Disabled
-    initial_option: Enabled
-    restore_value: true
-    icon: mdi:led-on
-    on_value:
-      then:
-      - if:
-          condition:
-            lambda: 'return ( (id(select_led).state == "Enabled") && id(relay).state );'
-          then:
-            switch.turn_on: blue_led
-          else:
-            switch.turn_off: blue_led
-
-
-# Send IP Address to HA
-text_sensor:
-  - platform: wifi_info
-    ip_address:
-      name: $friendly_name IP Address
