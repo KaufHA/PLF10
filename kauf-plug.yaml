@@ -82,8 +82,12 @@ binary_sensor:
       inverted: true
 
     on_press:
-      then:
-        switch.toggle: relay
+    - if:
+        condition: # only toggle relay if button is enabled
+          lambda: 'return (id(select_button).state == "Enabled");'
+        then:
+          switch.toggle: relay
+
 
     # indicates whether plugged-in devices is running based on configurable threshold.
   - platform: template
