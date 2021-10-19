@@ -20,7 +20,7 @@ esphome:
 
   project:
     name: "kauf.plf10"
-    version: "1.6"
+    version: "1.7"
 
 
   on_boot:
@@ -36,9 +36,6 @@ esphome:
           then:
             - logger.log: "------------------->>>>>>>>>>>>>>>>>   already has wifi configured, leaving ap timeout cranked"
           else:      # if credentials not loaded or force_ap is set, lower ap timeout to allow saving new credentials
-            - globals.set:  # clear global whether or not wifi ever connects.
-                id: force_ap
-                value: 'false'
             - logger.log: "------------------->>>>>>>>>>>>>>>>>   wifi not configured, enabling ap and waiting"
 
               # set ap timeout to 15 seconds in milliseconds.
@@ -47,7 +44,9 @@ esphome:
             - wait_until:
                 wifi.connected
             - logger.log: "------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up"
-
+            - globals.set:  # clear global 
+                id: force_ap
+                value: 'false'
               # set ap timeout to max 32 bit value in milliseconds.  About 3.5 weeks.
             - lambda: |-
                 wifi_wificomponent->set_ap_timeout(2147483647);  
@@ -175,7 +174,13 @@ script:
       - switch.toggle: blue_led
       - delay: 333ms
       - script.execute: blink_led
-
+  - id: clear_wifi_script
+    then:
+      - lambda: |-
+          wifi_wificomponent->clear_stored_creds();  
+      - delay: 2s
+      - switch.turn_on: restart_switch
+    
 
 switch:    
 
@@ -205,6 +210,16 @@ switch:
 
   - platform: restart
     id: restart_switch
+    
+  - platform: template
+    id: clear_wifi_switch
+    name: Kauf Plug Clear WiFi Credentials
+    optimistic: true
+    disabled_by_default: true
+#    restore_state: no  # no is default already per https://esphome.io/components/switch/template.html
+    on_turn_on:
+      then:
+        script.execute: clear_wifi_script
 
 
 # clock input from Home Assistant used to calculate total daily energy
