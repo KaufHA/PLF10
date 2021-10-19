@@ -169,6 +169,9 @@ class WiFiComponent : public Component {
   void add_sta(const WiFiAP &ap);
   void clear_sta();
 
+  // add function to clear stored wifi credentials to force AP without taking down wifi network.
+  void clear_stored_creds();
+
   /** Setup an Access Point that should be created if no connection to a station can be made.
    *
    * This can also be used without set_sta(). Then the AP will always be active.

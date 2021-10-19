@@ -33,12 +33,26 @@ static const char *const TAG = "wifi";
 
 float WiFiComponent::get_setup_priority() const { return setup_priority::WIFI; }
 
+void WiFiComponent::clear_stored_creds() {
+  ESP_LOGD(TAG, "------------------->>>>>>>>>>>>>>>>>   Clearing saved WiFi credentials");
+
+  // create new preferences object with invalid hash
+  this->pref_ = global_preferences.make_preference<wifi::SavedWifiSettings>(0, true);
+
+  SavedWifiSettings save{};
+  strncpy(save.ssid, "", sizeof(save.ssid));
+  strncpy(save.password, "", sizeof(save.password));
+  this->pref_.save(&save);
+
+}
+
 void WiFiComponent::setup() {
   ESP_LOGCONFIG(TAG, "Setting up WiFi...");
   this->last_connected_ = millis();
   this->wifi_pre_setup_();
 
-  // hard code time from first public release (v1.5) as hash argument so all firmware versions always have the same hash.
+  // hard code build date/time from first public release (v1.5) as hash argument so that
+  // all firmware versions always have the same hash.
   uint32_t hash = fnv1_hash("Aug 19 2021, 16:12:23");
   this->pref_ = global_preferences.make_preference<wifi::SavedWifiSettings>(hash, true);
 
@@ -51,9 +65,12 @@ void WiFiComponent::setup() {
     sta.set_password(save.password);
     this->set_sta(sta);
 
+    // tells ESPHome yaml file boot routine that WiFi credentials were successfully loaded
     loaded_creds = true;
   }
 
+  // tells ESPHome yaml file boot routine that an attempt was made to load credentials
+  // whether or not successful.
   tried_loading_creds = true;
 
   if (this->has_sta()) {

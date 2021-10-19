@@ -177,7 +177,7 @@ void WebServer::handle_index_request(AsyncWebServerRequest *request) {
   
   stream->print(F("<p>KAUF Plug by <a href=\"https://kaufha.com\" target=\"_blank\" rel=\"noopener noreferrer\">Kaufman Home Automation</a></p>"));
   stream->print(F("<p>Firmware made using <a href=\"https://esphome.io\" target=\"_blank\" rel=\"noopener noreferrer\">ESPHome</a></p>"));
-  stream->print(F("<p>KAUF Plug firmware version 1.6, ESPHome version 2021.9.2</p>"));
+  stream->print(F("<p>KAUF Plug firmware version 1.7, ESPHome version 2021.9.3</p>"));
   
 
   

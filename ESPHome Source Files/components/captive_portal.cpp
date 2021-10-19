@@ -20,8 +20,10 @@ void CaptivePortal::handle_index(AsyncWebServerRequest *request) {
   stream->print(F("<body><div class=\"main\"><h1>WiFi Networks</h1>"));
 
   if (request->hasArg("save")) {
-    stream->print(F("<div class=\"info\">The ESP will now try to connect to the network...<br/>Please give it some "
+    // KAUF edit
+    stream->print(F("<div class=\"info\">The KAUF Smart Plug will now try to connect to the network...<br/><br/>Please give it some "
                     "time to connect.</div>"));
+    // KAUF edit end
   }
 
   for (auto &scan : wifi::global_wifi_component->get_scan_result()) {

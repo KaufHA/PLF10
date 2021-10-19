@@ -52,6 +52,8 @@ bool ESPPreferenceObject::save_() {
   return true;
 }
 
+#ifdef ARDUINO_ARCH_ESP8266
+
 static const uint32_t ESP_RTC_USER_MEM_START = 0x60001200;
 #define ESP_RTC_USER_MEM ((uint32_t *) ESP_RTC_USER_MEM_START)
 static const uint32_t ESP_RTC_USER_MEM_SIZE_WORDS = 128;
@@ -186,13 +188,15 @@ ESPPreferenceObject ESPPreferences::make_preference(size_t length, uint32_t type
     uint32_t start;
 
     // ESPHome just assigns addresses as they pop up, but we want to preserve all addresses so they always remain
-    // the same after an update and value are always loaded properly.  Address is based on type/hash we receive,
-    // which will always be different for each entity.
+    // the same after an update and values are always loaded properly after update.  Address is based on type/hash
+    // we receive, which will always be the same for each entity based on its name.  Except WiFi, which is based on
+    // compile time but we have hard coded to the original compile time of the first public release.
     if      ( type == 817087403  ) { start = 0;  }  // v1.5 - Blue LED
     else if ( type == 41191675   ) { start = 2;  }  // v1.5 - Relay
     else if ( type == 3932521563 ) { start = 4;  }  // v1.5 - Use Threshold
     else if ( type == 1903527169 ) { start = 6;  }  // v1.5 - Total Daily Energy
-    else if ( type == 1432266978 ) { start = 8;  }  // v1.5 - Wi-Fi Credentials
+    else if ( type == 1432266978 ) { start = 8;  }  // v1.5 - WiFi Credentials
+    else if ( type == 0          ) { start = 8;  }  // v1.7 - Clear Wifi Credentials
     else if ( type == 3616613942 ) { start = 34; }  // v1.6 - Select 1 (Button or LED)
     else if ( type == 3104663617 ) { start = 36; }  // v1.6 - Select 2 (Button or LED)
     else if ( type == 629479035  ) { start = 38; }  // v1.6 - Force AP Global Variable
@@ -245,7 +249,76 @@ ESPPreferenceObject ESPPreferences::make_preference(size_t length, uint32_t type
 }
 void ESPPreferences::prevent_write(bool prevent) { this->prevent_write_ = prevent; }
 bool ESPPreferences::is_prevent_write() { return this->prevent_write_; }
+#endif
 
+#ifdef ARDUINO_ARCH_ESP32
+bool ESPPreferenceObject::save_internal_() {
+  if (global_preferences.nvs_handle_ == 0)
+    return false;
+
+  char key[32];
+  sprintf(key, "%u", this->offset_);
+  uint32_t len = (this->length_words_ + 1) * 4;
+  esp_err_t err = nvs_set_blob(global_preferences.nvs_handle_, key, this->data_, len);
+  if (err) {
+    ESP_LOGV(TAG, "nvs_set_blob('%s', len=%u) failed: %s", key, len, esp_err_to_name(err));
+    return false;
+  }
+  err = nvs_commit(global_preferences.nvs_handle_);
+  if (err) {
+    ESP_LOGV(TAG, "nvs_commit('%s', len=%u) failed: %s", key, len, esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
+bool ESPPreferenceObject::load_internal_() {
+  if (global_preferences.nvs_handle_ == 0)
+    return false;
+
+  char key[32];
+  sprintf(key, "%u", this->offset_);
+  size_t len = (this->length_words_ + 1) * 4;
+
+  size_t actual_len;
+  esp_err_t err = nvs_get_blob(global_preferences.nvs_handle_, key, nullptr, &actual_len);
+  if (err) {
+    ESP_LOGV(TAG, "nvs_get_blob('%s'): %s - the key might not be set yet", key, esp_err_to_name(err));
+    return false;
+  }
+  if (actual_len != len) {
+    ESP_LOGVV(TAG, "NVS length does not match. Assuming key changed (%u!=%u)", actual_len, len);
+    return false;
+  }
+  err = nvs_get_blob(global_preferences.nvs_handle_, key, this->data_, &len);
+  if (err) {
+    ESP_LOGV(TAG, "nvs_get_blob('%s') failed: %s", key, esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
+ESPPreferences::ESPPreferences() : current_offset_(0) {}
+void ESPPreferences::begin() {
+  auto ns = truncate_string(App.get_name(), 15);
+  esp_err_t err = nvs_open(ns.c_str(), NVS_READWRITE, &this->nvs_handle_);
+  if (err) {
+    ESP_LOGW(TAG, "nvs_open failed: %s - erasing NVS...", esp_err_to_name(err));
+    nvs_flash_deinit();
+    nvs_flash_erase();
+    nvs_flash_init();
+
+    err = nvs_open(ns.c_str(), NVS_READWRITE, &this->nvs_handle_);
+    if (err) {
+      this->nvs_handle_ = 0;
+    }
+  }
+}
+
+ESPPreferenceObject ESPPreferences::make_preference(size_t length, uint32_t type, bool in_flash) {
+  auto pref = ESPPreferenceObject(this->current_offset_, length, type);
+  this->current_offset_++;
+  return pref;
+}
+#endif
 uint32_t ESPPreferenceObject::calculate_crc_() const {
   uint32_t crc = this->type_;
   for (size_t i = 0; i < this->length_words_; i++) {
