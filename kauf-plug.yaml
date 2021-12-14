@@ -24,12 +24,6 @@ wifi:
   ssid: initial_ap2          # !secret wifi_ssid
   password: asdfasdfasdfasdf # !secret wifi_pass
 
-  # Delete the following line to acknowledge that you know that you must enter your home network's
-  # wi-fi credentials in the preceding two fields.  If for whatever reason the credentials are typed
-  # in wrong you will have to set up a wifi network with the entered credentials to recover your plug.
-  you_must_enter_wifi_credentials_above: true
-
-
   # Uncomment below to set a static IP
   # manual_ip:
   #   static_ip: !secret kauf_bulb_rgb_ip_address
