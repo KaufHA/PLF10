@@ -5,10 +5,8 @@
 #include "esphome/core/application.h"
 #include <StreamString.h>
 
-// KAUF edit
 // needed for string searching below
 #include <string>         // std::string
-// KAUF edit end
 
 #ifdef USE_ESP32
 #include <Update.h>
@@ -43,8 +41,7 @@ void OTARequestHandler::handleUpload(AsyncWebServerRequest *request, const Strin
                                      uint8_t *data, size_t len, bool final) {
   bool success;
 
-// KAUF edit
-// kill process if "minimal" is found in string
+  // kill process if "minimal" is found in string
   std::string str = filename.c_str();
   std::size_t found = str.find("minimal");
 
@@ -53,7 +50,6 @@ void OTARequestHandler::handleUpload(AsyncWebServerRequest *request, const Strin
      report_ota_error();
      return;
   }
-// KAUF edit end
 
   if (index == 0) {
     ESP_LOGI(TAG, "OTA Update Start: %s", filename.c_str());
