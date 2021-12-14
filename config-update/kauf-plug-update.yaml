@@ -1,53 +1,98 @@
 substitutions:
-
-  # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
   friendly_name: Kauf Plug
 
 esp8266:                       # https://esphome.io/components/esp8266.html
   board: esp01_1m
   restore_from_flash: true
 
+external_components:
+  - source:
+      type: git
+      url: https://github.com/KaufHA/kauf_plf10_components
+    refresh: 0s
+  # - source:
+  #     type: local
+  #     path: kauf_plf10_components
 
+preferences:
+  flash_write_interval: 3s
+  
 esphome:
 
-  name: kauf-plug # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
-                  # **** USE DASHES (-) INSTEAD OF SPACES OR UNDERSCORE (_).  USE ONLY LOWER CASE LETTERS.     ****
-
+  name: kauf-plug
+  name_add_mac_suffix: true
 
   project:
     name: "kauf.plf10"
     version: "1.8"
 
+  on_boot:
+    then:
+
+      # wait until ESPHome tries loading wifi credentials
+      - wait_until:
+          lambda: 'return ( wifi_wificomponent->tried_loading_creds );'
+
+
+      - if:
+          condition: # don't do anything if credentials were loaded unless force_ap is on as override
+            lambda: 'return ( wifi_wificomponent->loaded_creds && !id(force_ap) );'
+          then:
+            - logger.log: "------------------->>>>>>>>>>>>>>>>>   wifi already configured, leaving ap timeout cranked"
+
+            - globals.set:  # set global so if wifi never connects we'll have AP next time.
+                id: force_ap
+                value: 'true'
+
+            - wait_until:
+                wifi.connected
+            - globals.set:  # clear global so we won't have AP next time
+                id: force_ap
+                value: 'false'
+
+          # if we do need AP 
+          else:           # if credentials not loaded or force_ap is set, lower ap timeout to allow saving new credentials
+            - logger.log: "------------------->>>>>>>>>>>>>>>>>   wifi not configured, enabling ap and waiting"
+              # set ap timeout to 15 seconds in milliseconds.
+            - lambda: 'wifi_wificomponent->set_ap_timeout(15000);'
+            - wait_until:
+                wifi.connected
+            - globals.set:  # clear global so ap doesn't come back up next time
+                id: force_ap
+                value: 'false'
+
+              # set ap timeout to max 32 bit value in milliseconds.  About 3.5 weeks.
+            - logger.log: "------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up"
+            - lambda: 'wifi_wificomponent->set_ap_timeout(2147483647);'
+
+globals:
+  - id: force_ap
+    type: bool
+    restore_value: yes
+    initial_value: "true"
+
+
 wifi:
 
-  # **** ENTER WI-FI CREDENTIALS HERE, USING SECRETS.YAML RECOMMENDED ****
-  ssid: initial_ap2          # !secret wifi_ssid
-  password: asdfasdfasdfasdf # !secret wifi_pass
+  # default credentials as backup.  Also needed to show found networks in captive portal.
+  ssid: initial_ap2
+  password: asdfasdfasdfasdf
 
-  # Delete the following line to acknowledge that you know that you must enter your home network's
-  # wi-fi credentials in the preceding two fields.  If for whatever reason the credentials are typed
-  # in wrong you will have to set up a wifi network with the entered credentials to recover your plug.
-  you_must_enter_wifi_credentials_above: true
-
-
-  # Uncomment below to set a static IP
-  # manual_ip:
-  #   static_ip: !secret kauf_bulb_rgb_ip_address
-  #   gateway: !secret wifi_gateway
-  #   subnet: !secret wifi_subnet
-  #   dns1: !secret wifi_dns1
-
-  # use_address allows wireless programming through dashboard.
-  # Set to the bulb's IP Address.  Remove after programming.
-  # use_address: 192.168.86.244
+  # use_address allows wireless programming through dashboard.  remove after programming.
+  # use_address: 192.168.86.202
 
   # default is 20, 17 is recommended.
   output_power: 17
 
+  ap:
+    ssid: ${friendly_name} Hotspot
+    ap_timeout: 2147483647ms          # default to max 32-bit value in milliseconds.  About 3.5 weeks.
 
+
+captive_portal:                       # for fallback wifi hotspot
 
 logger:                               # Enable logging
-#  baud_rate: 0                       # Disable UART logging since TX pad not easily available
+  # baud_rate: 0                      # Disable UART logging since TX pad not easily available
 
 api:                                  # Enable Home Assistant API
   # password: !secret api_password    # optional password field for Home Assistant API.
@@ -57,12 +102,17 @@ ota:
 
 debug:                                # outputs additional debug info when logs start
 
+
 web_server:                           # web server allows access to device with a web browser
   # auth:                             # optional login details for web interface
   #   username: admin
   #   password: !secret web_server_password
 
-
+  # host css and js file directly on device
+  css_include: "webserver-v1.min.css"
+  css_url: ""
+  js_include: "webserver-v1.min.js"
+  js_url: ""
 
 
 # red led, blink when not connected to WiFi or Home Assistant
@@ -85,7 +135,10 @@ binary_sensor:
     entity_category: ''
     
 
-    on_press:
+    on_click:
+
+      - min_length: 30ms
+        max_length: 2s
         then:
           - if:
               condition: # only toggle relay if button is enabled
@@ -94,12 +147,47 @@ binary_sensor:
                 switch.toggle: relay
 
 
+
+        # restart with AP enabled if button is held for 5 seconds (up to 30 seconds because ESPHome requires a max).
+        # Not disabled by button disable option because you may not be able to re-enable button if wifi is not connecting.
+        # If your kid accidentally triggers this, the plug will just reboot and reconnect to wifi.  Shouldn't harm anything.
+
+      - min_length: 5s
+        max_length: 30s
+        then:
+          - logger.log: "------------------->>>>>>>>>>>>>>>>>   HELD BUTTON 5 SECONDS, FORCING AP"
+  
+          # blink LED for 10s then restart to get captive portal to turn on.
+          - globals.set:
+              id: force_ap
+              value: 'true'
+          - script.execute: blink_led
+          - delay: 10s
+
+          # we have to restart because ESPHome's AP won't show the captive portal once wifi has been connected.
+          - switch.turn_on: restart_switch
+
+
     # indicates whether plugged-in device is running based on configurable threshold.
   - platform: template
     id: in_use
     name: ${friendly_name} Device In Use
 
 
+script:
+    # blink LED forever.  Used when button is held to re-enable AP.  Stops blinking because plug restarts.
+  - id: blink_led
+    mode: queued
+    then:
+      - switch.toggle: blue_led
+      - delay: 333ms
+      - script.execute: blink_led
+    # clear wifi credentials and reboot.  causes AP to be enabled.
+  - id: clear_wifi_script
+    then:
+      - lambda: 'wifi_wificomponent->clear_stored_creds();'
+      - delay: 2s
+      - switch.turn_on: restart_switch
 
 switch:    
 
@@ -134,6 +222,17 @@ switch:
     entity_category: diagnostic
     disabled_by_default: true
     
+  - platform: template
+    id: clear_wifi_switch
+    name: $friendly_name Clear WiFi Credentials
+    optimistic: true
+    entity_category: diagnostic
+    disabled_by_default: true
+#    restore_state: no  # no is default already per https://esphome.io/components/switch/template.html
+    on_turn_on:
+      then:
+        script.execute: clear_wifi_script
+
 
 # clock input from Home Assistant used to calculate total daily energy
 time:
