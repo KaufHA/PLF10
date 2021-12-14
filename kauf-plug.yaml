@@ -1,7 +1,10 @@
 substitutions:
 
-  # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
-  friendly_name: Kauf Plug
+  name: kauf-plug              # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
+                               # **** USE DASHES (-) INSTEAD OF SPACES OR UNDERSCORE (_).  USE ONLY LOWER CASE LETTERS.     ****
+  
+  friendly_name: Kauf Plug     # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
+
 
 esp8266:                       # https://esphome.io/components/esp8266.html
   board: esp01_1m
@@ -10,10 +13,8 @@ esp8266:                       # https://esphome.io/components/esp8266.html
 
 esphome:
 
-  name: kauf-plug # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
-                  # **** USE DASHES (-) INSTEAD OF SPACES OR UNDERSCORE (_).  USE ONLY LOWER CASE LETTERS.     ****
-
-
+  name: $name
+  
   project:
     name: "kauf.plf10"
     version: "1.8"
