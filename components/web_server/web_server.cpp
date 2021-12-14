@@ -270,7 +270,7 @@ void WebServer::handle_index_request(AsyncWebServerRequest *request) {
                   "REST API documentation.</p>"));
   if (this->allow_ota_) {
     stream->print(F("<h2>OTA Update</h2>"
-                    "<br />**** DO NOT USE <b>TASMOTA-MINIMAL</b>.BIN or .BIN.GZ. **** Use tasmota.bin.gz.<br />"
+                    "**** DO NOT USE <b>TASMOTA-MINIMAL</b>.BIN or .BIN.GZ. **** Use tasmota.bin.gz.<br />"
                     "After the firmware is uploaded, a blank page will appear with the message <b>Update Successful!</b>.  If anything strange or different happens, please remove power to the plug before trying to flash again. <br /><br /> "
                     "<form method=\"POST\" action=\"/update\" enctype=\"multipart/form-data\"><input "
                     "type=\"file\" name=\"update\"><input type=\"submit\" value=\"Update\"></form>"));
