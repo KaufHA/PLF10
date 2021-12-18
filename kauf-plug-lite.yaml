@@ -1,18 +1,23 @@
 substitutions:
 
-  # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
-  friendly_name: Kauf Plug
+  name: kauf-plug              # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
+                               # **** USE DASHES (-) INSTEAD OF SPACES OR UNDERSCORE (_).  USE ONLY LOWER CASE LETTERS.     ****
+  
+  friendly_name: Kauf Plug     # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
 
 
 esphome:
 
-  # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE ****
-  name: kauf-plug     # **** RENAME YAML FILE TO SAME NAME ****
+  name: $name
 
   platform: ESP8266
   board: esp01_1m
 
   esp8266_restore_from_flash: true
+
+  project:
+    name: "kauf.plf10"
+    version: "1.83l"
 
 
 wifi:
@@ -21,11 +26,6 @@ wifi:
   ssid: initial_ap2          # !secret my_wifi_ssid
   password: asdfasdfasdfasdf # !secret my_wifi_pass
   
-  # Delete the following line to acknowledge that you know that you must enter your home network's
-  # wi-fi credentials in the preceding two fields.  If for whatever reason the credentials are typed
-  # in wrong you will have to set up a wifi network with the entered credentials to recover your plug.
-  you_must_enter_wifi_credentials_above: true
-
   # Uncomment below to set a static IP
   # manual_ip:
   #   static_ip: !secret kauf_bulb_ip_address
@@ -40,6 +40,9 @@ wifi:
   # default is 20, 17 is recommended.
   output_power: 17
 
+  # using fast_connect as default since it is required for hidden networks.
+  # feel free to change or override.
+  fast_connect: true
 
 logger:                               # Enable logging
 #  baud_rate: 0                       # Disable UART logging since TX pad not easily available

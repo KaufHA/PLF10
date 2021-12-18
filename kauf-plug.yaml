@@ -17,7 +17,7 @@ esphome:
 
   project:
     name: "kauf.plf10"
-    version: "1.82"
+    version: "1.83"
 
 wifi:
 
@@ -39,6 +39,9 @@ wifi:
   # default is 20, 17 is recommended.
   output_power: 17
 
+  # using fast_connect as default since it is required for hidden networks.
+  # feel free to change or override.
+  fast_connect: true
 
 
 logger:                               # Enable logging
@@ -263,3 +266,4 @@ text_sensor:
   - platform: wifi_info
     ip_address:
       name: $friendly_name IP Address
+      disabled_by_default: true
