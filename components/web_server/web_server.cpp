@@ -187,7 +187,7 @@ void WebServer::handle_index_request(AsyncWebServerRequest *request) {
   stream->print(F("</h1>"));
   
   stream->print(F("<p>KAUF Plug by <a href=\"https://kaufha.com/plf10\" target=\"_blank\" rel=\"noopener noreferrer\">Kaufman Home Automation</a></p>"));
-  stream->print(F("<p>Firmware version 1.82 made using <a href=\"https://esphome.io\" target=\"_blank\" rel=\"noopener noreferrer\">ESPHome</a> version 2021.12.0</p>"));
+  stream->print(F("<p>Firmware version 1.83 made using <a href=\"https://esphome.io\" target=\"_blank\" rel=\"noopener noreferrer\">ESPHome</a> version 2021.12.1</p>"));
   stream->print(F("<p><a href=\"https://github.com/KaufHA/PLF10/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Check for Updates</a></p>"));
   
 
@@ -403,8 +403,6 @@ void WebServer::handle_switch_request(AsyncWebServerRequest *request, const UrlM
 #ifdef USE_BUTTON
 void WebServer::handle_button_request(AsyncWebServerRequest *request, const UrlMatch &match) {
   for (button::Button *obj : App.get_buttons()) {
-    if (obj->is_internal())
-      continue;
     if (obj->get_object_id() != match.id)
       continue;
 

@@ -22,10 +22,8 @@ void CaptivePortal::handle_index(AsyncWebServerRequest *request) {
   stream->print(F("<body><div class=\"main\"><h1>WiFi Networks</h1>"));
 
   if (request->hasArg("save")) {
-    // KAUF edit
     stream->print(F("<div class=\"info\">The KAUF Smart Plug will now try to connect to the network...<br/><br/>Please give it some "
                     "time to connect.</div>"));
-    // KAUF edit end
   }
 
   for (auto &scan : wifi::global_wifi_component->get_scan_result()) {
@@ -56,15 +54,11 @@ void CaptivePortal::handle_index(AsyncWebServerRequest *request) {
   stream->print(F("<h3>WiFi Settings</h3><form method=\"GET\" action=\"/wifisave\"><input id=\"ssid\" name=\"ssid\" "
                   "length=32 placeholder=\"SSID\"><br/><input id=\"psk\" name=\"psk\" length=64 type=\"password\" "
                   "placeholder=\"Password\"><br/><br/><button type=\"submit\">Save</button></form><br><hr><br>"));
-
-  // KAUF edit
   // add warning about not flashing tasmota-minimal.
   stream->print(F("<h1>OTA Update: </h1>"
                   "<br />**** DO NOT USE <b>TASMOTA-MINIMAL</b>.BIN or .BIN.GZ. **** Use tasmota.bin.gz."
                   "<form method=\"POST\" action=\"/update\" enctype=\"multipart/form-data\"><input "
                   "type=\"file\" name=\"update\"><button type=\"submit\">Update</button></form>"));
-  // KAUF edit end
-
   stream->print(F("</div></body></html>"));
   request->send(stream);
 }

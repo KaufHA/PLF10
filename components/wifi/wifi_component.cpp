@@ -67,6 +67,9 @@ void WiFiComponent::setup() {
 
     // tells ESPHome yaml file boot routine that WiFi credentials were successfully loaded
     loaded_creds = true;
+
+    // always use fast connect for saved credentials
+    this->set_fast_connect(true);
   }
 
   // tells ESPHome yaml file boot routine that an attempt was made to load credentials
