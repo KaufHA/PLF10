@@ -25,7 +25,7 @@ esphome:
 
   project:
     name: "kauf.plf10"
-    version: "1.82"
+    version: "1.83"
 
   on_boot:
     then:
@@ -437,3 +437,4 @@ text_sensor:
   - platform: wifi_info
     ip_address:
       name: $friendly_name IP Address
+      disabled_by_default: true
