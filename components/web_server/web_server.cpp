@@ -7,6 +7,7 @@
 #include "esphome/core/util.h"
 #include "esphome/components/json/json_util.h"
 #include "esphome/components/network/util.h"
+#include "esphome/core/version.h"
 
 #include "StreamString.h"
 
