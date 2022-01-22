@@ -187,8 +187,11 @@ void WebServer::handle_index_request(AsyncWebServerRequest *request) {
   stream->print(F("</h1>"));
   
   stream->print(F("<p>KAUF Plug by <a href=\"https://kaufha.com/plf10\" target=\"_blank\" rel=\"noopener noreferrer\">Kaufman Home Automation</a></p>"));
-  stream->print(F("<p>Firmware version 1.83 made using <a href=\"https://esphome.io\" target=\"_blank\" rel=\"noopener noreferrer\">ESPHome</a> version 2021.12.1</p>"));
-  stream->print(F("<p><a href=\"https://github.com/KaufHA/PLF10/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Check for Updates</a></p>"));
+  stream->print(F("<p>Firmware version "));
+  stream->print(ESPHOME_PROJECT_VERSION);
+  stream->print(F(" made using <a href=\"https://esphome.io\" target=\"_blank\" rel=\"noopener noreferrer\">ESPHome</a> version "));
+  stream->print(ESPHOME_VERSION);
+  stream->print(F("</p><p><a href=\"https://github.com/KaufHA/PLF10/releases\" target=\"_blank\" rel=\"noopener noreferrer\">Check for Updates</a></p>"));
   
 
   
