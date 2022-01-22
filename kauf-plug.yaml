@@ -17,7 +17,7 @@ esphome:
 
   project:
     name: "kauf.plf10"
-    version: "1.83"
+    version: "1.83y"
 
 wifi:
 
