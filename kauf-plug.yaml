@@ -19,6 +19,17 @@ esphome:
     name: "kauf.plf10"
     version: "1.83y"
 
+external_components:
+  - source:
+      type: git
+      url: https://github.com/KaufHA/PLF10
+    refresh: 0s
+    
+    # web_server is not required, it just adds the version number to the web interface and also a warning about not flashing tasmota-minimal.
+    # web_server_base is not required, it just makes the OTA system error out if minimal is found in an uploaded firmware filename.
+    components: [web_server,web_server_base]
+
+
 wifi:
 
   # **** ENTER WI-FI CREDENTIALS HERE, USING SECRETS.YAML RECOMMENDED ****
