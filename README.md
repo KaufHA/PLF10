@@ -1,7 +1,7 @@
 # PLF10
 
 
-The recommended way to import a plug into your ESPHome dashboard is through the dashboard import feature. The plug will need to be updated to 1.83 to be discovered by the ESPHome dashboard. You can accomplish the same thing without updating first by using the following yaml modified as desired.
+The recommended way to import a plug into your ESPHome dashboard is through the dashboard import feature. The plug will need to be updated to 1.83 or greater to be discovered by the ESPHome dashboard. You can accomplish the same thing without updating first by using the following yaml modified as desired.
 
 The friendly_name substitution is recommended and will not be automatically created by the ESPHome dashboard import.
 
@@ -23,7 +23,7 @@ wifi:
 
 This repo contains files for the PLF10 Power Monitoring Smart Plug.
 
-***components* directory** - external components written or edited by Kaufman Home Automation for compiling update and factory firmware files.
+***components* directory** - Custom components needed to compile the PLF10 Smart Plug firmware. These don't need to be downloaded, the yaml files automatically grab them by reference to this github repo. Every subfolder not starting with kauf_* is copied from stock ESPHome and edited for our products.
 
 ***config-update* directory** - Files needed in the ESPHome config directory to compile the update bin file for the smart plugs.
 
