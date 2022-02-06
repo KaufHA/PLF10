@@ -183,22 +183,23 @@ class ESP8266Preferences : public ESPPreferences {
       // the same after an update and then saved values are always loaded properly after update.  Address is based on
       // type/hash we receive, which will always be the same for each entity based on its name.  Except WiFi, which
       // is based on compile time but we have hard coded to the original compile time of the first public release.
-      if      ( type == 817087403  ) { start = 0;  }  // v1.5 - Blue LED
-      else if ( type == 41191675   ) { start = 2;  }  // v1.5 - Relay
-      else if ( type == 3932521563 ) { start = 4;  }  // v1.5 - Use Threshold
-      else if ( type == 1903527169 ) { start = 6;  }  // v1.5 - Total Daily Energy
-      else if ( type == 1432266978 ) { start = 8;  }  // v1.5 - WiFi Credentials
-      else if ( type == 0          ) { start = 8;  }  // v1.7 - Clear Wifi Credentials
-      else if ( type == 3616613942 ) { start = 34; }  // v1.6 - Select 1 (Button or LED)
-      else if ( type == 3104663617 ) { start = 36; }  // v1.6 - Select 2 (Button or LED)
-      else if ( type == 629479035  ) { start = 38; }  // v1.6 - Force AP Global Variable
-      else if ( type == 3755051405 ) { start = 40; }  // v1.7 - First Boot - for factory testing
-      
+      if      ( type == 2048874009 ) { start = 0;  }  // v1.4 - WiFi Credentials
+      else if ( type == 0          ) { start = 0;  }  // v1.6 - Clear WiFi Credentials
+      else if ( type == 629479035  ) { start = 26; }  // v1.6 - Force AP Global Variable
+      else if ( type == 4077116474 ) { start = 28; }  // v1.6 - Warm RGB Aux Light
+      else if ( type == 301094535  ) { start = 40; }  // v1.6 - Cold RGB Aux Light
+      else if ( type == 2723974766 ) { start = 52; }  // v1.6 - Main Light
+      else if ( type == 3524332562 ) { start = 64; }  // v1.6 - Boot state select
+      else if ( type == 5841966    ) { start = 66; }  // v1.7 - Effect select
+      else if ( type == 3755051405 ) { start = 68; }  // v1.7 - First boot Variable
+
       // should never get to this because ESPHome only saves a pretty small number of well defined things.
+      // end users might see it if they add their own entities and also have uart logging hooked up to see messages this early.
       else {
-        ESP_LOGD("KAUF Preferences", "              !!!! EXCEEDED EXPECTED MAXIMUM FLASH MEMORY ADDRESS !!!!");
+        ESP_LOGD("KAUF Preferences", "              !!!! NOTE: STORING PAST DEFAULT FLASH TABLE !!!!");
+
         // set start to end of memory map above if it's not there already.
-        if ( this->current_flash_offset < 42 ) {this->current_flash_offset = 42;}
+        if ( this->current_flash_offset < 70 ) {this->current_flash_offset = 70;}
         start = this->current_flash_offset;
       }
 
@@ -211,10 +212,13 @@ class ESP8266Preferences : public ESPPreferences {
       pref->type = type;
       pref->length_words = length_words;
       pref->in_flash = true;
-      current_flash_offset = end;
+
+
+      // don't adopt end as current_flash_offset unless past end of memory map.
+      // otherwise it will reset to 104 every time an expected type comes through.
+      if ( end > 70 ) {current_flash_offset = end;}
 
       ESP_LOGD(TAG, "Making Preference in Flash - start: %u: length: %u, length_words:%u type: %u", start, length, length_words, type);
-
       return {pref};
     }
 
