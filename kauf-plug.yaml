@@ -17,7 +17,7 @@ esphome:
 
   project:
     name: "kauf.plf10"
-    version: "1.83y"
+    version: "1.84y"
 
 external_components:
   - source:
@@ -25,16 +25,15 @@ external_components:
       url: https://github.com/KaufHA/PLF10
     refresh: 0s
     
-    # web_server is not required, it just adds the version number to the web interface and also a warning about not flashing tasmota-minimal.
-    # web_server_base is not required, it just makes the OTA system error out if minimal is found in an uploaded firmware filename.
-    components: [web_server,web_server_base]
-
+  # - source:
+  #     type: local
+  #     path: kauf_plf10_components
 
 wifi:
 
   # **** ENTER WI-FI CREDENTIALS HERE, USING SECRETS.YAML RECOMMENDED ****
-  ssid: initial_ap2          # !secret wifi_ssid
-  password: asdfasdfasdfasdf # !secret wifi_pass
+  ssid: initial_ap2 #!secret wifi_ssid
+  password: asdfasdfasdfasdf # !secret wifi_password
 
   # Uncomment below to set a static IP
   # manual_ip:
@@ -124,7 +123,8 @@ switch:
     name: $friendly_name
     pin: GPIO4
     entity_category: ''
-
+    forced_hash: 41191675
+    
     # automatically make blue led equal relay state
     on_turn_on:
       - if:
@@ -135,6 +135,8 @@ switch:
 
     on_turn_off:
       - switch.turn_off: blue_led
+    
+
 
 button:
   - platform: restart
@@ -204,7 +206,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     filters:
         - multiply: 0.001  ## convert Wh to kWh
     unit_of_measurement: kWh
-
+    forced_hash: 1903527169
 
 number:      # used as a threshold for whether the plugged-in devices is running.
   - platform: template
@@ -219,6 +221,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     restore_value: true
     unit_of_measurement: Watt(s)
     mode: box
+    forced_hash: 3932521563
     on_value:
       - if:               # set or clear in_use template binary sensor depending on whether power usage is above threshold
           condition:
@@ -247,7 +250,7 @@ select:
     restore_value: true
     icon: mdi:circle-double
     entity_category: config
-
+    forced_hash: 3616613942
 
     # option to disable blue LED
   - platform: template
@@ -261,6 +264,7 @@ select:
     initial_option: Enabled
     restore_value: true
     icon: mdi:led-on
+    forced_hash: 3104663617
     on_value:
       then:
       - if:
