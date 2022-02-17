@@ -22,15 +22,15 @@ esphome:
 external_components:
   - source:
       type: git
-      url: https://github.com/KaufHA/common
-    refresh: 0s
-  - source:
-      type: git
       url: https://github.com/KaufHA/PLF10
     refresh: 0s
   # - source:
   #     type: local
   #     path: kauf_plf10_components
+  - source:
+      type: git
+      url: https://github.com/KaufHA/common
+    refresh: 0s
 
 wifi:
 
@@ -55,6 +55,8 @@ wifi:
   # using fast_connect as default since it is required for hidden networks.
   # feel free to change or override.
   fast_connect: true
+
+  forced_hash: 1432266978
 
 
 logger:                               # Enable logging
