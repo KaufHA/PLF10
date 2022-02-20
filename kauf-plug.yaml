@@ -56,9 +56,6 @@ wifi:
   # feel free to change or override.
   fast_connect: true
 
-  forced_hash: 1432266978
-
-
 logger:                               # Enable logging
   # baud_rate: 0                      # Disable UART logging since TX pad not easily available
 
