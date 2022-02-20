@@ -91,6 +91,8 @@ wifi:
     ssid: ${friendly_name} Hotspot
     ap_timeout: 2147483647ms          # default to max 32-bit value in milliseconds.  About 3.5 weeks.
 
+  forced_hash: 1432266978
+
 
 captive_portal:                       # for fallback wifi hotspot
 
