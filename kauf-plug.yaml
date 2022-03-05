@@ -2,8 +2,42 @@ substitutions:
 
   name: kauf-plug              # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
                                # **** USE DASHES (-) INSTEAD OF SPACES OR UNDERSCORE (_).  USE ONLY LOWER CASE LETTERS.     ****
-  
   friendly_name: Kauf Plug     # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
+
+
+  sub_restore_mode: "RESTORE_DEFAULT_OFF" # overwrite to change boot up behavior of relay
+  disable_entities: "true"     # set to "false" to have all entities show up in Home Assistant automatically
+
+
+  # substitutions for button actions.  yaml dashboard import uses press, but update bin file uses hold_short to allow hold_long
+  # to turn on wifi ap.  These substitutions can be overwritten in the user's yaml file to do anything.
+  sub_on_press:         script_toggle     # executes right when button is initially pressed
+  sub_on_release:       script_do_nothing # executes right when button is released
+  sub_on_release_quick: script_do_nothing # executes when button is released after being held under 750ms
+  sub_on_release_short: script_do_nothing # executes when button is released after being held between 750ms and 5s
+  # For a longer hold, see kauf-plug-update.yaml in the config-update directory.
+  # You have to start a time in the on_press script and cancel the timer in the on_release script.
+  # or if you wanted to require release, then start a counter on press and check the value on release.
+  # If you want to have a hold action, you probably want to toggle on release_quick instead of on_press so that
+  # you can perform the hold action without toggling the plug's relay.
+
+
+  # substitutions for power monitoring calibration.  Allows end users to change calibration in their yaml and still
+  # incorporate this file as a package to get all the updates we release.
+  current_resistor_val: "0.001"
+  voltage_divider_val:  "2401"
+  power_cal_val1_in:    "0.0"
+  power_cal_val1_out:   "0.0"
+  power_cal_val2_in:    "333.8"
+  power_cal_val2_out:   "60"
+  current_cal_val1_in:  "0.0"
+  current_cal_val1_out: "0.0"
+  current_cal_val2_in:  "0.6"
+  current_cal_val2_out: "0.515"
+  voltage_cal_val1_in:  "0.0"
+  voltage_cal_val1_out: "0.0"
+  voltage_cal_val2_in:  "302.1"
+  voltage_cal_val2_out: "117.1"
 
 
 esp8266:                       # https://esphome.io/components/esp8266.html
@@ -11,32 +45,39 @@ esp8266:                       # https://esphome.io/components/esp8266.html
   restore_from_flash: true
 
 
+preferences:
+  flash_write_interval: 3s
+
+
 esphome:
-
   name: $name
-
   project:
     name: "kauf.plf10"
-    version: "1.84y"
+    version: "1.85(y)"
+
 
 external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/PLF10
     refresh: 0s
-  # - source:
-  #     type: local
-  #     path: kauf_plf10_components
   - source:
       type: git
       url: https://github.com/KaufHA/common
     refresh: 0s
+  # - source:
+  #     type: local
+  #     path: kauf_plf10_components
+  # - source:
+  #     type: local
+  #     path: kauf_common_components
+
 
 wifi:
 
   # **** ENTER WI-FI CREDENTIALS HERE, USING SECRETS.YAML RECOMMENDED ****
-  ssid: initial_ap2 #!secret wifi_ssid
-  password: asdfasdfasdfasdf # !secret wifi_password
+  ssid: initial_ap            # !secret wifi_ssid
+  password: asdfasdfasdfasdf  # !secret wifi_password
 
   # Uncomment below to set a static IP
   # manual_ip:
@@ -53,19 +94,27 @@ wifi:
   output_power: 17
 
   # using fast_connect as default since it is required for hidden networks.
-  # feel free to change or override.
   fast_connect: true
+
 
 logger:                               # Enable logging
   # baud_rate: 0                      # Disable UART logging since TX pad not easily available
 
+
 api:                                  # Enable Home Assistant API
+  id: kauf_api
   # password: !secret api_password    # optional password field for Home Assistant API.
+
 
 ota:
   # password: !secret ota_password    # optional password for OTA updates.
+  on_error:
+    then:
+      - button.press: restart_button
+
 
 debug:                                # outputs additional debug info when logs start
+
 
 web_server:                           # web server allows access to device with a web browser
   # auth:                             # optional login details for web interface
@@ -92,15 +141,21 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true
     entity_category: ''
-    
-
     on_press:
         then:
-          - if:
-              condition: # only toggle relay if button is enabled
-                lambda: 'return (id(select_button).state == "Enabled");'
-              then:
-                switch.toggle: relay
+          - script.execute: $sub_on_press
+    on_release:
+        then:
+          - script.execute: $sub_on_release
+    on_click:
+      - min_length: 20ms
+        max_length: 750ms
+        then:
+          - script.execute: $sub_on_release_quick
+      - min_length: 750ms
+        max_length: 5s
+        then:
+          - script.execute: $sub_on_release_short
 
 
     # indicates whether plugged-in device is running based on configurable threshold.
@@ -108,6 +163,23 @@ binary_sensor:
     id: in_use
     name: ${friendly_name} Device In Use
 
+script:
+  - id: script_toggle
+    then:
+      - if:
+          condition: # only toggle relay if button is enabled
+            lambda: 'return (id(select_button).state == "Enabled");'
+          then:
+            switch.toggle: relay
+  - id: script_do_nothing
+    then:
+      - lambda: return;
+  - id: script_http_only
+    then:
+      - delay: 1ms
+      - lambda: |-
+          if ( id(switch_http_only).state ) { id(kauf_api)->set_reboot_timeout(0); }
+          else                              { id(kauf_api)->set_reboot_timeout(900000); }
 
 
 switch:    
@@ -126,7 +198,8 @@ switch:
     pin: GPIO4
     entity_category: ''
     forced_hash: 41191675
-    
+    restore_mode: $sub_restore_mode
+
     # automatically make blue led equal relay state
     on_turn_on:
       - if:
@@ -138,14 +211,26 @@ switch:
     on_turn_off:
       - switch.turn_off: blue_led
     
-
+  - platform: template
+    id: switch_http_only
+    name: $friendly_name HTTP Only
+    optimistic: true
+    restore_state: true
+    entity_category: config
+    disabled_by_default: $disable_entities
+    icon: mdi:toggle-switch-off-outline
+    on_turn_on:
+      - script.execute: script_http_only
+    on_turn_off:
+      - script.execute: script_http_only
+    forced_hash: 657159011
 
 button:
   - platform: restart
     id: restart_button
     name: $friendly_name Restart Firmware
     entity_category: diagnostic
-    disabled_by_default: true
+    disabled_by_default: $disable_entities
 
 
 # clock input from Home Assistant used to calculate total daily energy
@@ -161,16 +246,16 @@ sensor:   # Power monitoring sensors output to Home Assistant
       inverted: True
     cf_pin: GPIO5
     cf1_pin: GPIO14
-    current_resistor: 0.001 # The value of the shunt resistor for current measurement. 
-    voltage_divider: 2401   # The value of the voltage divider on the board as (R_upstream + R_downstream) / R_downstream. 
+    current_resistor: $current_resistor_val  # The value of the shunt resistor for current measurement. 
+    voltage_divider: $voltage_divider_val    # The value of the voltage divider on the board as (R_upstream + R_downstream) / R_downstream. 
     power:
       name: ${friendly_name} Power
       unit_of_measurement: W
       id: wattage
       filters:
         - calibrate_linear:
-            - 0.0 -> 0.0  
-            - 333.8 -> 60 # value with 60W bulb.
+            - $power_cal_val1_in -> $power_cal_val1_out
+            - $power_cal_val2_in -> $power_cal_val2_out
       on_value:   # set or clear in_use template binary sensor depending on whether power usage is over threshold
         - if:
             condition:
@@ -188,15 +273,15 @@ sensor:   # Power monitoring sensors output to Home Assistant
       unit_of_measurement: A
       filters:
         - calibrate_linear:
-            - 0.0 -> 0.0
-            - 0.6 -> 0.515  # value with 60W bulb.
+            - $current_cal_val1_in -> $current_cal_val1_out
+            - $current_cal_val2_in -> $current_cal_val2_out
     voltage:
       name: ${friendly_name} Voltage
       unit_of_measurement: V
       filters:
         - calibrate_linear:
-            - 0.0 -> 0.0
-            - 302.1 -> 117.1 # Tested using a meter
+            - $voltage_cal_val1_in -> $voltage_cal_val1_out
+            - $voltage_cal_val2_in -> $voltage_cal_val2_out
     change_mode_every: 1 
     update_interval: 10s # 20 second effective update rate for Power, 40 second for Current and Voltage.
 
@@ -209,6 +294,14 @@ sensor:   # Power monitoring sensors output to Home Assistant
         - multiply: 0.001  ## convert Wh to kWh
     unit_of_measurement: kWh
     forced_hash: 1903527169
+
+
+  - platform: uptime
+    name: $friendly_name Uptime
+    update_interval: 60s
+    entity_category: diagnostic
+    disabled_by_default: $disable_entities
+
 
 number:      # used as a threshold for whether the plugged-in devices is running.
   - platform: template
@@ -283,4 +376,4 @@ text_sensor:
   - platform: wifi_info
     ip_address:
       name: $friendly_name IP Address
-      disabled_by_default: true
+      disabled_by_default: $disable_entities
