@@ -193,6 +193,8 @@ class ESP8266Preferences : public ESPPreferences {
 
       uint32_t start;
 
+      uint32_t start_free = 44;
+      
       // ESPHome just assigns addresses as they pop up, but we want to preserve all addresses so they always remain
       // the same after an update and then saved values are always loaded properly after update.  Address is based on
       // type/hash we receive, which will always be the same for each entity based on its name.  Except WiFi, which
@@ -207,6 +209,10 @@ class ESP8266Preferences : public ESPPreferences {
       else if ( type == 3104663617 ) { start = 36; }  // v1.6 - Select 2 (LED)
       else if ( type == 629479035  ) { start = 38; }  // v1.6 - Force AP Global Variable
       else if ( type == 3755051405 ) { start = 40; }  // v1.7 - First Boot - for factory testing
+      else if ( type == 657159011  ) { start = 42; }  // v1.8 - HTTP-Only switch
+      
+      // temporary workaround for always using same address for wifi even with random hash
+      else if ( length_words == 25 ) { start = 8;  }
       
       // should never get to this because ESPHome only saves a pretty small number of well defined things.
       // end users might see it if they add their own entities and also have uart logging hooked up to see messages this early.
@@ -214,7 +220,7 @@ class ESP8266Preferences : public ESPPreferences {
         ESP_LOGD("KAUF Preferences", "              !!!! NOTE: STORING PAST DEFAULT FLASH TABLE !!!!");
 
         // set start to end of memory map above if it's not there already.
-        if ( this->current_flash_offset < 42 ) {this->current_flash_offset = 42;}
+        if ( this->current_flash_offset < start_free ) {this->current_flash_offset = start_free;}
         start = this->current_flash_offset;
       }
 
@@ -231,7 +237,7 @@ class ESP8266Preferences : public ESPPreferences {
 
       // don't adopt end as current_flash_offset unless past end of memory map.
       // otherwise it will reset to 104 every time an expected type comes through.
-      if ( end > 42 ) {current_flash_offset = end;}
+      if ( end > start_free ) {current_flash_offset = end;}
 
       ESP_LOGD(TAG, "Making Preference in Flash - start: %u: length: %u, length_words:%u type: %u", start, length, length_words, type);
       return {pref};
