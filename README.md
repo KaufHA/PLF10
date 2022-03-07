@@ -32,3 +32,11 @@ This repo contains files for the PLF10 Power Monitoring Smart Plug.
 ***kauf-plug.yaml*** - config yaml file needed to import a plug into your ESPHome dashboard and keep all custom KAUF functionality.
 
 ***kauf-plug-lite.yaml*** - config yaml file needed to import a plug into your ESPHome dashboard with only basic power monitoring smart plug functionality.
+
+
+
+## Tasmota Template
+
+```
+{"NAME":"KAUF Plug","GPIO":[576,0,320,0,224,2720,0,0,2624,32,2656,0,0,0],"FLAG":0,"BASE":18}
+```
