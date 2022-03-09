@@ -59,18 +59,18 @@ esphome:
 external_components:
   - source:
       type: git
-      url: https://github.com/KaufHA/PLF10
+      url: https://github.com/KaufHA/common
     refresh: 0s
   - source:
       type: git
-      url: https://github.com/KaufHA/common
+      url: https://github.com/KaufHA/PLF10
     refresh: 0s
   # - source:
   #     type: local
-  #     path: kauf_plf10_components
+  #     path: kauf_common_components
   # - source:
   #     type: local
-  #     path: kauf_common_components
+  #     path: kauf_plf10_components
 
 
 wifi:
