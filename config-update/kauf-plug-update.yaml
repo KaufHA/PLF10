@@ -24,7 +24,7 @@ esphome:
   # overwrite project for different letter suffix
   project:
     name: "kauf.plf10"
-    version: "1.85(u)"  # 'u' stands for update bin file
+    version: "1.86(u)"  # 'u' stands for update bin file
 
   on_boot:
     then:
