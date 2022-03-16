@@ -53,7 +53,7 @@ esphome:
   name: $name
   project:
     name: "kauf.plf10"
-    version: "1.86(y)"
+    version: "1.87(y)"
 
 
 external_components:
