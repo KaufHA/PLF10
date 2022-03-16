@@ -175,11 +175,11 @@ script:
   - id: script_do_nothing
     then:
       - lambda: return;
-  - id: script_no_api
+  - id: script_no_hass
     then:
       - delay: 1ms
       - lambda: |-
-          if ( id(switch_no_api).state ) {
+          if ( id(switch_no_hass).state ) {
             id(kauf_api)->set_reboot_timeout(0);
             id(kauf_api)->status_clear_warning();
           }
@@ -233,17 +233,17 @@ switch:
             light.turn_off: blue_led
     
   - platform: template
-    id: switch_no_api
-    name: $friendly_name No API
+    id: switch_no_hass
+    name: $friendly_name No HASS
     optimistic: true
     restore_state: true
     entity_category: config
     disabled_by_default: $disable_entities
     icon: mdi:toggle-switch-off-outline
     on_turn_on:
-      - script.execute: script_no_api
+      - script.execute: script_no_hass
     on_turn_off:
-      - script.execute: script_no_api
+      - script.execute: script_no_hass
     forced_hash: 657159011
 
 button:
