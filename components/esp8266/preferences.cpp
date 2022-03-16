@@ -14,12 +14,12 @@ extern "C" {
 
 #include "esphome/core/version.h"
 
-#if ESPHOME_VERSION_CODE < VERSION_CODE(2022, 2, 0)
-  #error "Please Update ESPHome to the latest version."
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2022, 3, 0)
+  #error "Please Update ESPHome to the latest version.  Expecting 2022.3.X"
 #endif
 
-#if ESPHOME_VERSION_CODE >= VERSION_CODE(2022, 3, 0)
-  #error "KAUF external components have not been updated for this version of ESPHome yet, or you are not using the latest KAUF external components version"
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2022, 4, 0)
+  #error "KAUF external components have not been updated for this version of ESPHome yet, or you are not using the latest KAUF external components version.  Expecting 2022.3.X.  You can try deleting the .esphome/packages and .esphome/external_components subdirectories within the ESPHome config directory to resolve this."
 #endif
 
 
@@ -193,7 +193,7 @@ class ESP8266Preferences : public ESPPreferences {
 
       uint32_t start;
 
-      uint32_t start_free = 56;
+      uint32_t start_free = 44;
       
       // ESPHome just assigns addresses as they pop up, but we want to preserve all addresses so they always remain
       // the same after an update and then saved values are always loaded properly after update.  Address is based on
@@ -209,8 +209,7 @@ class ESP8266Preferences : public ESPPreferences {
       else if ( type == 3104663617 ) { start = 36; }  // v1.6 - Select 2 (LED)
       else if ( type == 629479035  ) { start = 38; }  // v1.6 - Force AP Global Variable
       else if ( type == 3755051405 ) { start = 40; }  // v1.7 - First Boot - for factory testing
-      else if ( type == 657159011  ) { start = 42; }  // v1.8 - No API switch
-      else if ( type == 3831461887 ) { start = 44; }  // v1.8 - Blue LED Monochromatic Light
+      else if ( type == 657159011  ) { start = 42; }  // v1.8 - HTTP-Only switch
       
       // temporary workaround for always using same address for wifi even with random hash
       else if ( length_words == 25 ) { start = 8;  }
