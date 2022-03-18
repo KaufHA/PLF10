@@ -204,6 +204,11 @@ light:
     entity_category: config
     default_transition_length: 0s
     forced_hash: 3831461887
+    effects:
+      - flicker:
+          name: Flicker
+          alpha: 90%
+          intensity: 10%
 
 switch:    
 
