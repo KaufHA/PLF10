@@ -52,7 +52,7 @@ preferences:
 esphome:
   name: $name
   project:
-    name: "kauf.plf10"
+    name: "Kauf.PLF10"
     version: "1.87(y)"
 
 
