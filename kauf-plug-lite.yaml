@@ -53,7 +53,7 @@ esphome:
   name: $name
   project:
     name: "Kauf.PLF10"
-    version: "1.87(y)"
+    version: "1.87(l)"
 
 wifi:
 
