@@ -1,0 +1,86 @@
+packages:
+  kauf_plug_update:
+    url: https://github.com/KaufHA/PLF10
+    files: kauf-plug-update.yaml
+    refresh: 0s
+
+
+esphome:
+
+  # overwrite project for different letter suffix
+  project:
+    name: "Kauf.PLF10"
+    version: "1.87(f)"  # 'f' stands for factory image
+
+  on_boot:
+    then:
+
+      # little sequence so factory can confirm firwmare is working.
+      - if:
+          condition:
+            lambda: 'return id(first_boot);'
+          then:
+
+            # get AP going ASAP
+            - lambda: 'wifi_wificomponent->set_ap_timeout(1);'
+
+            # disable button toggling relay
+            - select.set:
+                id: select_button
+                option: "Disabled"
+
+            # turn on relay to draw current
+            - switch.turn_on: relay
+            - delay: 1s
+            - light.turn_off: blue_led
+
+            # wait until button is pressed, then turn on led
+            - while:
+                condition:
+                  binary_sensor.is_off: button_in
+                then:
+                  - light.turn_off: blue_led
+                  - delay: 50ms
+            - while:
+                condition:
+                  binary_sensor.is_on: button_in
+                then:
+                  - light.turn_on: blue_led
+                  - delay: 50ms
+
+            # give it some time to see if a crash occurs with both AP and relay on
+            - delay: 8s
+
+            # test passed, clear first_boot variable so we don't run this again
+            - globals.set:
+                id: first_boot
+                value: 'false'
+
+            # re-enable button toggling relay
+            - select.set:
+                id: select_button
+                option: "Enabled"
+
+            # delay time to save above changes
+            - delay: 3s
+
+            # blink blue led to indicate pass test until button is pressed then stay on
+            - while:
+                condition:
+                  binary_sensor.is_off: button_in
+                then:
+                  - light.toggle: blue_led
+                  - delay: 100ms
+            - while:
+                condition:
+                  binary_sensor.is_on: button_in
+                then:
+                  - light.turn_on: blue_led
+                  - delay: 50ms
+
+      
+globals:
+  - id: first_boot          # used to run routine at factory to confirm 
+    type: bool              # correct firwmare is running.
+    restore_value: yes
+    initial_value: 'true'
