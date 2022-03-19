@@ -4,6 +4,9 @@ substitutions:
                                # **** USE DASHES (-) INSTEAD OF SPACES OR UNDERSCORE (_).  USE ONLY LOWER CASE LETTERS.     ****
   friendly_name: Kauf Plug     # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
 
+  project_name: Kauf.PLF10
+  project_ver_num: "1.87"
+  project_ver_let: "y"
 
   sub_restore_mode: "RESTORE_DEFAULT_OFF" # overwrite to change boot up behavior of relay
   disable_entities: "true"     # set to "false" to have all entities show up in Home Assistant automatically
@@ -51,9 +54,10 @@ preferences:
 
 esphome:
   name: $name
+
   project:
-    name: "Kauf.PLF10"
-    version: "1.87(y)"
+    name: $project_name
+    version: $project_ver_num($project_ver_let)
 
 
 external_components:
