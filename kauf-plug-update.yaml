@@ -1,3 +1,6 @@
+substitutions:
+  project_ver_let: "u"
+  
 packages:
   kauf_plug_base:
     url: https://github.com/KaufHA/PLF10
@@ -20,11 +23,6 @@ substitutions:
 
 esphome:
   name_add_mac_suffix: true
-
-  # overwrite project for different letter suffix
-  project:
-    name: "Kauf.PLF10"
-    version: "1.87(u)"  # 'u' stands for update bin file
 
   on_boot:
     then:
