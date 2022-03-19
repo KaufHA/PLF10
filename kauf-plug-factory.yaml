@@ -1,3 +1,6 @@
+substitutions:
+  project_ver_let: "f"
+
 packages:
   kauf_plug_update:
     url: https://github.com/KaufHA/PLF10
@@ -7,10 +10,7 @@ packages:
 
 esphome:
 
-  # overwrite project for different letter suffix
-  project:
-    name: "Kauf.PLF10"
-    version: "1.87(f)"  # 'f' stands for factory image
+
 
   on_boot:
     then:
