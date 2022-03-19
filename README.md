@@ -13,29 +13,32 @@ substitutions:
 packages:
   kauf.plf10: github://KaufHA/PLF10/kauf-plug.yaml
 
-esphome:
-  name_add_mac_suffix: false
-
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 ```
 
+## Repo Contents
+
 This repo contains files for the PLF10 Power Monitoring Smart Plug.
 
 ***components* directory** - Custom components needed to compile the PLF10 Smart Plug firmware. These don't need to be downloaded, the yaml files automatically grab them by reference to this github repo. Every subfolder not starting with kauf_* is copied from stock ESPHome and edited for our products.
 
-***config-update* directory** - Files needed in the ESPHome config directory to compile the update bin file for the smart plugs.
+***kauf-plug.yaml*** - The yaml file recommended to import a plug into your ESPHome dashboard and keep all custom KAUF functionality.  This is the yaml file incorporated automatically when the dashboard import feature is used.
 
-***config-factory* directory** - Files needed in the ESPHome config directory to compile the factory bin file for the smart plugs.
+***kauf-plug-lite.yaml*** - A yaml file without any Kauf custom components but otherwise keeping as much functionality from kauf-plug.yaml as possible.
 
-***kauf-plug.yaml*** - config yaml file needed to import a plug into your ESPHome dashboard and keep all custom KAUF functionality.
+***kauf-plug-minimal.yaml*** - A yaml file to import a plug into your ESPHome dashboard with only basic power monitoring smart plug functionality.
 
-***kauf-plug-lite.yaml*** - config yaml file needed to import a plug into your ESPHome dashboard with only basic power monitoring smart plug functionality.
+***kauf-plug-update.yaml*** - The yaml file to build the update bin file.  Generally not needed by end users.
+
+***kauf-plug-factory.yaml*** - The yaml file to build the factory bin file.  Generally not needed by end users.
 
 
 
-## Tasmota Template
+
+
+## Recommended Tasmota Template
 
 ```
 {"NAME":"KAUF Plug","GPIO":[576,0,320,0,224,2720,0,0,2624,32,2656,0,0,0],"FLAG":0,"BASE":18}
