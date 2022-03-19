@@ -1,0 +1,123 @@
+packages:
+  kauf_plug_base:
+    url: https://github.com/KaufHA/PLF10
+    files: kauf-plug.yaml
+    refresh: 0s
+
+
+dashboard_import:
+  package_import_url: github://KaufHA/PLF10/kauf-plug.yaml
+
+
+substitutions:
+
+  # use hold instead of press for toggle action
+  sub_on_press:         script_timer_start
+  sub_on_release:       script_timer_stop
+  sub_on_release_quick: script_toggle
+  sub_on_release_short: script_toggle
+
+
+esphome:
+  name_add_mac_suffix: true
+
+  # overwrite project for different letter suffix
+  project:
+    name: "Kauf.PLF10"
+    version: "1.87(u)"  # 'u' stands for update bin file
+
+  on_boot:
+    then:
+
+      # wait until ESPHome tries loading wifi credentials
+      - wait_until:
+          lambda: 'return ( wifi_wificomponent->tried_loading_creds );'
+
+        # enable AP if credentials couldn't be loaded or force_ap is set
+      - lambda: |-
+          if ( !wifi_wificomponent->loaded_creds || id(force_ap) ) {
+            ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi not configured, enabling ap and waiting");
+            wifi_wificomponent->set_ap_timeout(15000);
+          }
+
+      - wait_until:       # wait until wifi connects
+          wifi.connected
+      - globals.set:      # clear global so ap doesn't come back up next time
+          id: force_ap
+          value: 'false'
+
+        # set ap timeout to max 32 bit value in milliseconds.  About 3.5 weeks.
+      - lambda: |-
+          ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up");
+          wifi_wificomponent->set_ap_timeout(2147483647);
+
+
+globals:
+  - id: force_ap
+    type: bool
+    restore_value: yes
+    initial_value: "true"
+
+
+# re-adding wifi component so that hotspot will be enabled
+wifi:
+
+  # enable wifi ap, which was not needed in dashboard import version
+  ap:
+    ssid: ${friendly_name} Hotspot
+    ap_timeout: 2147483647ms      # maximum 32 bit value.  About 3.5 weeks in milliseconds.
+
+  # by default, fast_connect is disabled.  Will automatically be enabled by wifi component
+  # needs to be set false here as dashboard import version sets true
+  fast_connect: false
+  
+  # add forced hash which isn't needed for dashboard import.  Allows saving wifi credentials across update.
+  forced_hash: 1432266978
+
+
+captive_portal:                       # for fallback wifi hotspot
+
+script:
+
+  - id: script_force_ap
+    then:
+      - logger.log: "------------------->>>>>>>>>>>>>>>>>   HELD BUTTON 5 SECONDS, FORCING AP"
+
+      # blink LED for 10s then restart to get captive portal to turn on.
+      - globals.set:
+          id: force_ap
+          value: 'true'
+      - script.execute: blink_led
+      - delay: 10s
+
+      # we have to restart because ESPHome's AP won't show the captive portal once wifi has been connected.
+      - button.press: restart_button
+
+    # blink LED forever.  Used when button is held to re-enable AP.  Stops blinking because plug restarts.
+  - id: blink_led
+    mode: queued
+    then:
+      - light.toggle: blue_led
+      - delay: 333ms
+      - script.execute: blink_led
+    # clear wifi credentials and reboot.  causes AP to be enabled.
+
+  - id: script_timer_start
+    then:
+      - delay: 5s
+      - script.execute: script_force_ap
+  - id: script_timer_stop
+    then:
+      - script.stop: script_timer_start
+
+button:
+  - platform: template
+    id: clear_wifi_button
+    name: $friendly_name Clear Wifi Credentials
+    entity_category: diagnostic
+    disabled_by_default: true
+    on_press:
+      then:
+      - lambda: 'wifi_wificomponent->clear_stored_creds();'
+      - delay: 2s
+      - button.press: restart_button
