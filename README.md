@@ -22,8 +22,6 @@ wifi:
 
 This repo contains files for the PLF10 Power Monitoring Smart Plug.
 
-***components* directory** - Custom components needed to compile the PLF10 Smart Plug firmware. These don't need to be downloaded, the yaml files automatically grab them by reference to this github repo. Every subfolder not starting with kauf_* is copied from stock ESPHome and edited for our products.
-
 ***kauf-plug.yaml*** - The yaml file recommended to import a plug into your ESPHome dashboard and keep all custom KAUF functionality.  This is the yaml file incorporated automatically when the dashboard import feature is used.
 
 ***kauf-plug-lite.yaml*** - A yaml file without any Kauf custom components but otherwise keeping as much functionality from kauf-plug.yaml as possible.
