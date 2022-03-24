@@ -9,7 +9,7 @@ The friendly_name substitution is recommended and will not be automatically crea
 substitutions:
   name: bedroom-lamp
   friendly_name: Bedroom Lamp
-  
+
 packages:
   kauf.plf10: github://KaufHA/PLF10/kauf-plug.yaml
 
@@ -28,9 +28,9 @@ This repo contains files for the PLF10 Power Monitoring Smart Plug.
 
 ***kauf-plug-minimal.yaml*** - A yaml file to import a plug into your ESPHome dashboard with only basic power monitoring smart plug functionality.
 
-***kauf-plug-update.yaml*** - The yaml file to build the update bin file.  Generally not needed by end users.
+***kauf-plug-update.yaml*** - The yaml file to build the update bin file.  Generally not useful to end users.
 
-***kauf-plug-factory.yaml*** - The yaml file to build the factory bin file.  Generally not needed by end users.
+***kauf-plug-factory.yaml*** - The yaml file to build the factory bin file.  Generally not useful to end users.
 
 
 
