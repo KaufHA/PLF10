@@ -1,5 +1,11 @@
 substitutions:
-  project_ver_let: "u"
+  project_ver_let: u
+
+  # use hold instead of press for toggle action
+  sub_on_press:         script_timer_start
+  sub_on_release:       script_timer_stop
+  sub_on_release_quick: script_toggle
+  sub_on_release_short: script_toggle
   
 packages:
   kauf_plug_base:
@@ -12,15 +18,6 @@ dashboard_import:
   package_import_url: github://KaufHA/PLF10/kauf-plug.yaml
 
 
-substitutions:
-
-  # use hold instead of press for toggle action
-  sub_on_press:         script_timer_start
-  sub_on_release:       script_timer_stop
-  sub_on_release_quick: script_toggle
-  sub_on_release_short: script_toggle
-
-
 esphome:
   name_add_mac_suffix: true
 
@@ -29,7 +26,7 @@ esphome:
 
       # wait until ESPHome tries loading wifi credentials
       - wait_until:
-          lambda: 'return ( wifi_wificomponent->tried_loading_creds );'
+          lambda: return ( wifi_wificomponent->tried_loading_creds );
 
         # enable AP if credentials couldn't be loaded or force_ap is set
       - lambda: |-
@@ -116,6 +113,6 @@ button:
     disabled_by_default: true
     on_press:
       then:
-      - lambda: 'wifi_wificomponent->clear_stored_creds();'
+      - lambda: wifi_wificomponent->clear_stored_creds();
       - delay: 2s
       - button.press: restart_button
