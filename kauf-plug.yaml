@@ -173,7 +173,7 @@ script:
     then:
       - if:
           condition: # only toggle relay if button is enabled
-            lambda: 'return (id(select_button).state == "Enabled");'
+            lambda: return (id(select_button).state == "Enabled");
           then:
             switch.toggle: relay
   - id: script_do_nothing
@@ -234,16 +234,26 @@ switch:
     on_turn_on:
       - if:
           condition: # only if blue LED enabled
-            lambda: 'return (id(select_led).state == "Enabled");'
+            lambda: return (id(select_led).state == "Enabled");
           then:
             light.turn_on: blue_led
+      - if:
+          condition: # only if blue LED enabled
+            lambda: return (id(select_led).state == "Inverted");
+          then:
+            light.turn_off: blue_led
 
     on_turn_off:
       - if:
           condition: # only if blue LED enabled
-            lambda: 'return (id(select_led).state == "Enabled");'
+            lambda: return (id(select_led).state == "Enabled");
           then:
             light.turn_off: blue_led
+      - if:
+          condition: # only if blue LED enabled
+            lambda: return (id(select_led).state == "Inverted");
+          then:
+            light.turn_on: blue_led
     
   - platform: template
     id: switch_no_hass
@@ -296,7 +306,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
       on_value:   # set or clear in_use template binary sensor depending on whether power usage is over threshold
         - if:
             condition:
-              lambda: 'return (x >= id(threshold).state);'
+              lambda: return (x >= id(threshold).state);
             then:
               - binary_sensor.template.publish:
                   id: in_use
@@ -361,7 +371,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     on_value:
       - if:               # set or clear in_use template binary sensor depending on whether power usage is above threshold
           condition:
-            lambda: 'return (id(wattage).state >= x);'
+            lambda: return (id(wattage).state >= x);
           then:
             - binary_sensor.template.publish:
                 id: in_use
@@ -399,6 +409,7 @@ select:
     options:
       - Enabled
       - Disabled
+      - Inverted
     initial_option: Enabled
     restore_value: true
     icon: mdi:led-on
@@ -408,9 +419,13 @@ select:
     
     on_value:
       then:           # changing to "disabled" will turn off LED, but then relay will not turn on or off LED.
-      - if:           # when "disabled", LED is 100% controlled by light entity.
+      - if:           # when "Disabled", LED is initially turned off but then 100% controlled by light entity.
           condition:
-            lambda: 'return ( (id(select_led).state == "Enabled") && id(relay).state );'
+            lambda: |-
+              if      ( id(select_led).state == "Enabled"  )  { return  id(relay).state; }
+              else if ( id(select_led).state == "Inverted" )  { return !id(relay).state; }
+              else /*   id(select_led).state == "Disabled" */ { return  false;           }
+              
           then:
             light.turn_on: blue_led
           else:
