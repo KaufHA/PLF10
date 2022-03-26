@@ -340,6 +340,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     filters:
         - multiply: 0.001  ## convert Wh to kWh
     unit_of_measurement: kWh
+    min_save_interval: 5min
     forced_hash: 1903527169
     forced_addr: 6
     global_addr: global_forced_addr
