@@ -42,6 +42,6 @@ This repo contains files for the PLF10 Power Monitoring Smart Plug.
 {"NAME":"KAUF Plug","GPIO":[576,0,320,0,224,2720,0,0,2624,32,2656,0,0,0],"FLAG":0,"BASE":18}
 ```
 
-## Other Links
+## Links
 - [Purchase plugs on Amazon](https://www.amazon.com/dp/B09JQ3LRHB) (*Temporarily out of stock*)
 - [KAUF YouTube Channel](https://www.youtube.com/channel/UCjgziIA-lXmcqcMIm8HDnYg)
