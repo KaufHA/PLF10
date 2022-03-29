@@ -5,7 +5,7 @@ substitutions:
   friendly_name: Kauf Plug     # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
 
   project_name: Kauf.PLF10
-  project_ver_num: "1.88.1"
+  project_ver_num: "1.88.2"
   project_ver_let: y
 
   sub_restore_mode: RESTORE_DEFAULT_OFF # overwrite to change boot up behavior of relay
