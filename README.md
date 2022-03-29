@@ -34,7 +34,7 @@ This repo contains files for the PLF10 Power Monitoring Smart Plug.
 
 
 ## Advanced Settings
-When using kauf-bulb.yaml as a package in the ESPHome dashboard, you can configure the following aspects by adding substitutions.  The substitutions section of kauf-bulb.yaml has comments with more explanation as well.
+When using kauf-plug.yaml as a package in the ESPHome dashboard, you can configure the following aspects by adding substitutions.  The substitutions section of kauf-plug.yaml has comments with more explanation as well.
 
 ***friendly_name*** - The friendly name will be used to name every entity in Home Assistant.  Add a substitution to change this to something descriptive for each device.
 
