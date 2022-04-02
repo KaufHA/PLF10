@@ -559,6 +559,8 @@ select:
     restore_value: true
     icon: mdi:wrench-clock
     entity_category: config
+    disabled_by_default: $disable_entities
+
     forced_hash: 1025003090
     forced_addr: 0
     global_addr: global_forced_addr
