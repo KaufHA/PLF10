@@ -232,6 +232,7 @@ script:
             id(hlw_main)->set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE);
           } 
 
+
 output:
   - platform: esp8266_pwm
     id: blue_led_pwm
@@ -255,6 +256,7 @@ light:
           name: Flicker
           alpha: 90%
           intensity: 10%
+
 
 switch:    
 
