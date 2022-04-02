@@ -47,7 +47,7 @@ When using kauf-plug.yaml as a package in the ESPHome dashboard, you can configu
 ***power monitoring calibration*** - all of the values used to calibrate the power monitoring calibration can be overwritten using substitutions to make the calibration more accurate.
 
 ## Factory Reset
-Going to the plug's URL in a web browser and adding /reset will completely wipe all settings from flash memory.
+Going to the plug's URL in a web browser and adding /reset will completely wipe all settings from flash memory.  Note that this will wipe the plug's memory of whether the relay was on or off, and therefore the plug may turn off.
 
 
 ## Troubleshooting
