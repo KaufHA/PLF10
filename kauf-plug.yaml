@@ -5,7 +5,7 @@ substitutions:
   friendly_name: Kauf Plug     # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
 
   project_name: Kauf.PLF10
-  project_ver_num: "1.88.2"
+  project_ver_num: "1.90"
   project_ver_let: y
 
   sub_restore_mode: RESTORE_DEFAULT_OFF # overwrite to change boot up behavior of relay
@@ -42,11 +42,16 @@ substitutions:
   voltage_cal_val2_in:  "302.1"
   voltage_cal_val2_out: "117.1"
 
+  # set power monitoring mode in yaml  https://esphome.io/components/sensor/hlw8012.html#configuration-variables
+  sub_change_mode_every: "1"
+  sub_update_interval: 10s
+  sub_initial_mode: CURRENT
+
 
 esp8266:                       # https://esphome.io/components/esp8266.html
   board: esp01_1m
   restore_from_flash: true
-  start_free: 56
+  start_free: 62
   global_addr: global_forced_addr
 
 
@@ -67,6 +72,13 @@ esphome:
   project:
     name: $project_name
     version: $project_ver_num($project_ver_let)
+
+  on_boot:
+    priority: 700
+    then:
+      # priority 700 ensures power monitoring mode variables are changed
+      # in this script before HLW component is setup
+      - script.execute: script_set_monitor_mode
 
 
 external_components:
@@ -191,6 +203,34 @@ script:
             id(kauf_api)->set_reboot_timeout(900000);
           }
 
+  - id: script_set_monitor_mode
+    then:
+      - lambda: |-
+
+          if ( id(select_monitor_mode).state == "10s P / 40s V,I") {
+            id(hlw_main)->set_update_interval(10000);
+            id(hlw_main)->set_change_mode_every(1);
+
+          } else if ( id(select_monitor_mode).state == "10s P,I Only" ) {
+            id(hlw_main)->set_update_interval(10000);
+            id(hlw_main)->set_change_mode_every(4294967295);
+            id(hlw_main)->set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_CURRENT);
+
+          } else if ( id(select_monitor_mode).state == "10s P,V Only" ) {
+            id(hlw_main)->set_update_interval(10000);
+            id(hlw_main)->set_change_mode_every(4294967295);
+            id(hlw_main)->set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE);
+
+          } else if ( id(select_monitor_mode).state == " 2s P,I Only" ) {
+            id(hlw_main)->set_update_interval(2000);
+            id(hlw_main)->set_change_mode_every(4294967295);
+            id(hlw_main)->set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_CURRENT);
+
+          } else if ( id(select_monitor_mode).state == " 2s P,V Only" ) {
+            id(hlw_main)->set_update_interval(2000);
+            id(hlw_main)->set_change_mode_every(4294967295);
+            id(hlw_main)->set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE);
+          } 
 
 output:
   - platform: esp8266_pwm
@@ -288,6 +328,7 @@ time:
 
 sensor:   # Power monitoring sensors output to Home Assistant
   - platform: hlw8012
+    id: hlw_main
     sel_pin:
       number: GPIO12
       inverted: True
@@ -295,6 +336,11 @@ sensor:   # Power monitoring sensors output to Home Assistant
     cf1_pin: GPIO14
     current_resistor: $current_resistor_val  # The value of the shunt resistor for current measurement. 
     voltage_divider: $voltage_divider_val    # The value of the voltage divider on the board as (R_upstream + R_downstream) / R_downstream. 
+
+    change_mode_every: $sub_change_mode_every 
+    update_interval: $sub_update_interval 
+    initial_mode: $sub_initial_mode
+
     power:
       name: ${friendly_name} Power
       unit_of_measurement: W
@@ -303,6 +349,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
         - calibrate_linear:
             - $power_cal_val1_in -> $power_cal_val1_out
             - $power_cal_val2_in -> $power_cal_val2_out
+        - lambda: return x * id(scale_power).state/100.0f;
       on_value:   # set or clear in_use template binary sensor depending on whether power usage is over threshold
         - if:
             condition:
@@ -315,22 +362,27 @@ sensor:   # Power monitoring sensors output to Home Assistant
               - binary_sensor.template.publish:
                   id: in_use
                   state: OFF
+
     current:
       name: ${friendly_name} Current
       unit_of_measurement: A
+      id: current
       filters:
         - calibrate_linear:
             - $current_cal_val1_in -> $current_cal_val1_out
             - $current_cal_val2_in -> $current_cal_val2_out
+        - lambda: return x * id(scale_current).state/100.0f;
+
     voltage:
       name: ${friendly_name} Voltage
       unit_of_measurement: V
+      id: voltage
       filters:
         - calibrate_linear:
             - $voltage_cal_val1_in -> $voltage_cal_val1_out
             - $voltage_cal_val2_in -> $voltage_cal_val2_out
-    change_mode_every: 1 
-    update_interval: 10s # 20 second effective update rate for Power, 40 second for Current and Voltage.
+        - lambda: return x * id(scale_voltage).state/100.0f;
+
 
 # Reports the total Power so-far each day, resets at midnight
 # See https://esphome.io/components/sensor/total_daily_energy.html
@@ -362,10 +414,11 @@ number:      # used as a threshold for whether the plugged-in devices is running
     initial_value: 3
     id: threshold
     entity_category: config
-    optimistic: true     # required for changing value from home assistant
+    optimistic: true
     restore_value: true
     unit_of_measurement: Watt(s)
     mode: box
+    disabled_by_default: $disable_entities
     forced_hash: 3932521563
     forced_addr: 4
     global_addr: global_forced_addr
@@ -382,6 +435,63 @@ number:      # used as a threshold for whether the plugged-in devices is running
                 id: in_use
                 state: OFF
 
+  - platform: template
+    name: ${friendly_name} Scale Power
+    min_value: 50
+    max_value: 200
+    step: .1
+    initial_value: 100
+    id: scale_power
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "%"
+    mode: box
+    disabled_by_default: $disable_entities
+    forced_hash: 3565176138
+    forced_addr: 56
+    global_addr: global_forced_addr
+    on_value:
+      - lambda: id(wattage)->publish_state(id(wattage)->get_raw_state());
+
+  - platform: template
+    name: ${friendly_name} Scale Current
+    min_value: 50
+    max_value: 200
+    step: .1
+    initial_value: 100
+    id: scale_current
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "%"
+    mode: box
+    disabled_by_default: $disable_entities
+    forced_hash: 2293595686
+    forced_addr: 58
+    global_addr: global_forced_addr
+    on_value:
+      - lambda: id(current)->publish_state(id(current)->get_raw_state());
+
+  - platform: template
+    name: ${friendly_name} Scale Voltage
+    min_value: 50
+    max_value: 200
+    step: .1
+    initial_value: 100
+    id: scale_voltage
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "%"
+    mode: box
+    disabled_by_default: $disable_entities
+    forced_hash: 254525215
+    forced_addr: 60
+    global_addr: global_forced_addr
+    on_value:
+      - lambda: id(voltage)->publish_state(id(voltage)->get_raw_state());
+  
 
 select:
 
@@ -433,6 +543,33 @@ select:
             light.turn_off: blue_led
 
 
+  # change mode of power monitoring
+  - platform: template
+    name: $friendly_name Monitoring Mode
+    id: select_monitor_mode
+    optimistic: true
+    options:
+      - "10s P / 40s V,I"
+      - "10s P,I Only"
+      - "10s P,V Only"
+      - " 2s P,I Only"
+      - " 2s P,V Only"
+      - "YAML Configured"
+    initial_option: "10s P / 40s V,I"
+    restore_value: true
+    icon: mdi:wrench-clock
+    entity_category: config
+    forced_hash: 1025003090
+    forced_addr: 0
+    global_addr: global_forced_addr
+    
+    set_action:
+      - delay: 1s
+      - lambda: global_preferences->sync();
+      - delay: 1s
+      - button.press: restart_button
+
+
 # Send IP Address to HA
 text_sensor:
   - platform: wifi_info
@@ -442,7 +579,7 @@ text_sensor:
 
 
 # Current reserved flash memory:
-
+# 00-01: Power Monitoring Mode
 # 02-03: Relay output
 # 04-05: Use Threshold
 # 06-07: Total Daily Energy
@@ -452,3 +589,6 @@ text_sensor:
 
 # 42-43: No HASS switch
 # 44-55: Blue LED light entity
+# 56-57: Scale Power
+# 58-59: Scale Current
+# 60-61: Scale Voltage
