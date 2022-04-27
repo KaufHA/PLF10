@@ -1,14 +1,26 @@
+# https://esphome.io/guides/configuration-types.html#substitutions
 substitutions:
+
+  # substitutions can be changed here if you are using this file directly in the ESPHome dashboard.  The better approach is
+  # to incorporate this file as a package using the following lines, and then overwrite these substitutions in your local
+  # yaml file by redefining them.
+  #
+  # packages:
+  #   kauf.plf10: github://bkaufx/PLF10/kauf-plug.yaml
+  #
 
   name: kauf-plug              # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
                                # **** USE DASHES (-) INSTEAD OF SPACES OR UNDERSCORE (_).  USE ONLY LOWER CASE LETTERS.     ****
   friendly_name: Kauf Plug     # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
 
+  # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
   project_ver_num: "1.90"
   project_ver_let: y
 
+  # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
   sub_restore_mode: RESTORE_DEFAULT_OFF # overwrite to change boot up behavior of relay
+
   disable_entities: "true"     # set to "false" to have all entities show up in Home Assistant automatically
 
 
@@ -42,19 +54,23 @@ substitutions:
   voltage_cal_val2_in:  "302.1"
   voltage_cal_val2_out: "117.1"
 
-  # set power monitoring mode in yaml  https://esphome.io/components/sensor/hlw8012.html#configuration-variables
+  # set power monitoring mode in yaml, selecting the "yaml_configured" option in the select entity will cause these values
+  # to be used after next reboot.
+  # https://esphome.io/components/sensor/hlw8012.html#configuration-variables
   sub_change_mode_every: "1"
   sub_update_interval: 10s
   sub_initial_mode: CURRENT
 
 
-esp8266:                       # https://esphome.io/components/esp8266.html
+# https://esphome.io/components/esp8266.html
+esp8266
   board: esp01_1m
   restore_from_flash: true
   start_free: 62
   global_addr: global_forced_addr
 
 
+# https://esphome.io/guides/automations.html#global-variables
 globals:
   - id: global_forced_addr
     type: int
@@ -62,10 +78,12 @@ globals:
     initial_value: '12345'
 
 
+# https://esphome.io/components/esphome.html#adjusting-flash-writes
 preferences:
   flash_write_interval: 3s
 
 
+# https://esphome.io/components/esphome.html
 esphome:
   name: $name
 
@@ -81,6 +99,7 @@ esphome:
       - script.execute: script_set_monitor_mode
 
 
+# https://esphome.io/components/external_components.html
 external_components:
   - source:
       type: git
@@ -88,22 +107,12 @@ external_components:
     refresh: 0s
 
 
+# https://esphome.io/components/wifi.html
 wifi:
 
   # **** ENTER WI-FI CREDENTIALS HERE, USING SECRETS.YAML RECOMMENDED ****
   ssid: initial_ap            # !secret wifi_ssid
   password: asdfasdfasdfasdf  # !secret wifi_password
-
-  # Uncomment below to set a static IP
-  # manual_ip:
-  #   static_ip: !secret kauf_bulb_rgb_ip_address
-  #   gateway: !secret wifi_gateway
-  #   subnet: !secret wifi_subnet
-  #   dns1: !secret wifi_dns1
-
-  # use_address allows wireless programming through dashboard.
-  # Set to the bulb's IP Address.  Remove after programming.
-  # use_address: 192.168.86.244
 
   # default is 20, 17 is recommended.
   output_power: 17
@@ -114,15 +123,19 @@ wifi:
   forced_addr: 8
   global_addr: global_forced_addr
 
+
+# https://esphome.io/components/logger.html
 logger:                               # Enable logging
   # baud_rate: 0                      # Disable UART logging since TX pad not easily available
 
 
+# https://esphome.io/components/api.html
 api:                                  # Enable Home Assistant API
   id: kauf_api
   # password: !secret api_password    # optional password field for Home Assistant API.
 
 
+# https://esphome.io/components/ota.html
 ota:
   # password: !secret ota_password    # optional password for OTA updates.
   on_error:
@@ -130,9 +143,11 @@ ota:
       - button.press: restart_button
 
 
+# https://esphome.io/components/debug.html
 debug:                                # outputs additional debug info when logs start
 
 
+# https://esphome.io/components/web_server.html
 web_server:                           # web server allows access to device with a web browser
   local: true
   # auth:                             # optional login details for web interface
@@ -141,15 +156,18 @@ web_server:                           # web server allows access to device with 
 
 
 # red led, blink when not connected to WiFi or Home Assistant
+# https://esphome.io/components/status_led.html
 status_led:
     pin:
       number: GPIO0
       inverted: true
 
 
+# https://esphome.io/components/binary_sensor/index.html
 binary_sensor:  
 
     # button input toggles relay and thereby blue led
+    # https://esphome.io/components/binary_sensor/gpio.html
   - platform: gpio
     id: button_in
     name: $friendly_name Button
@@ -175,11 +193,13 @@ binary_sensor:
           - script.execute: $sub_on_release_short
 
     # indicates whether plugged-in device is running based on configurable threshold.
+    # https://esphome.io/components/binary_sensor/template.html
   - platform: template
     id: in_use
     name: ${friendly_name} Device In Use
 
 
+# https://esphome.io/guides/automations.html#script-component
 script:
   - id: script_toggle
     then:
@@ -233,6 +253,7 @@ script:
           } 
 
 
+# https://esphome.io/components/output/esp8266_pwm.html
 output:
   - platform: esp8266_pwm
     id: blue_led_pwm
@@ -241,6 +262,8 @@ output:
     inverted: true
 
 
+# https://esphome.io/components/light/index.html
+# https://esphome.io/components/light/monochromatic.html
 light:
   - platform: monochromatic
     name: $friendly_name Blue LED
@@ -258,9 +281,11 @@ light:
           intensity: 10%
 
 
+# https://esphome.io/components/switch/index.html
 switch:    
 
-# relay output
+    # relay output
+    # https://esphome.io/components/switch/gpio.html
   - platform: gpio
     id: relay
     name: $friendly_name
@@ -297,6 +322,7 @@ switch:
           then:
             light.turn_on: blue_led
     
+    # https://esphome.io/components/switch/template.html
   - platform: template
     id: switch_no_hass
     name: $friendly_name No HASS
@@ -314,6 +340,8 @@ switch:
     global_addr: global_forced_addr
 
 
+# https://esphome.io/components/button/index.html
+# https://esphome.io/components/button/restart.html
 button:
   - platform: restart
     id: restart_button
@@ -323,12 +351,16 @@ button:
 
 
 # clock input from Home Assistant used to calculate total daily energy
+# https://esphome.io/components/time.html#home-assistant-time-source
 time:
   - platform: homeassistant
     id: homeassistant_time
 
 
+# https://esphome.io/components/sensor/index.html
 sensor:   # Power monitoring sensors output to Home Assistant
+
+    # https://esphome.io/components/sensor/hlw8012.html
   - platform: hlw8012
     id: hlw_main
     sel_pin:
@@ -386,8 +418,8 @@ sensor:   # Power monitoring sensors output to Home Assistant
         - lambda: return x * id(scale_voltage).state/100.0f;
 
 
-# Reports the total Power so-far each day, resets at midnight
-# See https://esphome.io/components/sensor/total_daily_energy.html
+    # Reports the total Power so-far each day, resets at midnight
+    # https://esphome.io/components/sensor/total_daily_energy.html
   - platform: total_daily_energy
     name: ${friendly_name} Total Daily Energy
     power_id: wattage
@@ -399,7 +431,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     forced_addr: 6
     global_addr: global_forced_addr
 
-
+    # https://esphome.io/components/sensor/uptime.html
   - platform: uptime
     name: $friendly_name Uptime
     update_interval: 60s
@@ -407,6 +439,8 @@ sensor:   # Power monitoring sensors output to Home Assistant
     disabled_by_default: $disable_entities
 
 
+# https://esphome.io/components/number/index.html
+# https://esphome.io/components/number/template.html
 number:      # used as a threshold for whether the plugged-in devices is running.
   - platform: template
     name: ${friendly_name} Use Threshold
@@ -495,6 +529,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: id(voltage)->publish_state(id(voltage)->get_raw_state());
   
 
+# https://esphome.io/components/select/index.html
+# https://esphome.io/components/select/template.html
 select:
 
     # option to disable button
@@ -575,6 +611,7 @@ select:
 
 
 # Send IP Address to HA
+# https://esphome.io/components/text_sensor/wifi_info.html
 text_sensor:
   - platform: wifi_info
     ip_address:
