@@ -173,7 +173,9 @@ binary_sensor:
     name: $friendly_name Button
     pin:
       number: GPIO13
-      mode: INPUT_PULLUP
+      mode:
+        input: true
+        pullup: true
       inverted: true
     entity_category: ''
     on_press:
