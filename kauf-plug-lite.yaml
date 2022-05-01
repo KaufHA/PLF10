@@ -6,7 +6,7 @@ substitutions:
   # in your local yaml file by redefining them.
   #
   # packages:
-  #   kauf.plf10: github://bkaufx/PLF10/kauf-plug.yaml
+  #   kauf.plf10: github://bkaufx/PLF10/kauf-plug-lite.yaml
   #
 
   name: kauf-plug              # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.91"
+  project_ver_num: "1.911"
   project_ver_let: l
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -61,8 +61,6 @@ substitutions:
   sub_update_interval: 10s
   sub_initial_mode: CURRENT
 
-  # can be used to block status led from blinking
-  sub_blink_check:      script_blink_check
 
 # https://esphome.io/components/esp8266.html
 esp8266:
@@ -199,7 +197,6 @@ script:
     then:
       - lambda: |-
 
-
           auto call = id(blue_led).make_call();
 
           // blue power status
@@ -230,42 +227,9 @@ script:
 
           call.perform();
 
-
-
-
-    ############################################################################
-    # scripts for different things the button can do:                          #
-    #  * toggle                                                                #
-    #  * nothing                                                               #
-    ############################################################################
-  - id: script_toggle
-    then:
-      - if:
-          condition: # only toggle relay if button is enabled
-            lambda: return (id(select_button).state == "Enabled");
-          then:
-            switch.toggle: relay
-
-  - id: script_do_nothing
-    then:
-      - lambda: return;
-
-
-
-    ############################################################################
-    # scripts for status led                                                   #
-    #  * Blink LED - blinks led once.  keeps calling itself as long as         #
-    #                warning/error exists                                      #
-    #  * Blink check - cancel blinking before it happens if desired            #
-    #                  can be used to block blinking in specified conditions   #
-    ############################################################################
   - id: blink_status_led
     mode: queued
     then:
-
-      # allows the blinking to be blocked if desired by overwriting script substitution
-      # the script will need 'script.stop: blink_status_led' to stop status led
-      - script.execute: $sub_blink_check
 
       - lambda: |-
 
@@ -286,7 +250,6 @@ script:
             call.set_save(false);
             call.perform();
           }
-               
 
       - delay: 350ms
 
@@ -321,9 +284,21 @@ script:
             - script.execute: script_set_power_leds # done with status LED, restore light power status
 
 
-  - id: script_blink_check
+    ############################################################################
+    # scripts for different things the button can do:                          #
+    #  * toggle                                                                #
+    #  * nothing                                                               #
+    ############################################################################
+  - id: script_toggle
     then:
-      # - script.stop: blink_status_led # prevents status led from blinking.
+      - if:
+          condition: # only toggle relay if button is enabled
+            lambda: return (id(select_button).state == "Enabled");
+          then:
+            switch.toggle: relay
+
+  - id: script_do_nothing
+    then:
       - lambda: return;
 
 
@@ -611,7 +586,6 @@ select:
     initial_option: Power Status
     restore_value: true
     icon: mdi:led-on
-
     on_value:
       then:
         - if:
@@ -636,7 +610,6 @@ select:
     initial_option: Error Status
     restore_value: true
     icon: mdi:led-on
-
     on_value:
       then:
         - if:
