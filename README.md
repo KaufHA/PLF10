@@ -33,6 +33,44 @@ This repo contains files for the PLF10 Power Monitoring Smart Plug.
 ***kauf-plug-factory.yaml*** - The yaml file to build the factory bin file.  Generally not useful to end users.
 
 
+## Configuration Entities
+If using the precompiled binary or kauf-plug.yaml as a package in the ESPHome dashboard, the following configuration entities are automatically created.  Entities listed as disabled by default can be enabled in Home Assistant, or simply modified through the web interface by clicking "Visit Device" in Home Assistant or typing the plug's IP address into a web browser.
+
+***Blue LED*** light entity - This is in the configuration section because the main intent is to control the blue LED's brightness.  However, you can also directly control the blue LED in automations or manually.
+
+***Blue LED*** select entity - Configures the behavior of the blue LED.  Has the following options.  Defaults to *Power Status*.
+- *Power Status*: LED follows relay state.
+- *No Automation*: The plug will never automatically change the LED, but the LED can still be controlled via the light entity.
+- *Invert Power Status*: LED follows the inverse of the relay's state (LED on when relay is off).
+- *Error Status*: The LED will blink when an error is detected.  The most common errors are being unable to connect to Wi-Fi or Home Assistant.
+- *Error and Power*: The LED will follow the relay state, but then also blink when an error is detected.
+- *Error and Invert Power*: The LED will follow the inverse of the relay state, but then also blink when an error is detected.
+
+***Red LED*** light entity - Same as the Blue LED light entity, but for the Red LED.
+
+***Red LED*** select entity - Same as the Blue LED select entity, but for the Red LED.  Defaults to *Error Status*.
+
+***Button*** select entity - If *Enabled*, pressing the button will toggle the relay.  If *Disabled*, pressing the button will not toggle the relay.
+
+***Monitoring Mode*** select entity - Disabled by default.  Modifies the frequency and mode of power monitoring sensors.  Defaults to *10s P / 40s V,I*.
+- *10s P / 40s V,I* - Power is measured and reported every 10 seconds.  Current and voltage are each reported every 40 seconds, alternating such that one is reported every 20 seconds.
+- *10s P,I Only* - Power and current are both reported every 10 seconds.  Voltage is never reported.
+- *10s P,V Only* - Power and voltage are both reported every 10 seconds.  Current is never reported.
+- *2s P,I Only* - Power and current are both reported every 2 seconds.  Voltage is never reported.
+- *2s P,V Only* - Power and voltage are both reported every 2 seconds.  Current is never reported.
+- *YAML Configured* - Uses the values defined by substitutions in YAML.  For the precompiled binaries, this is the same as *10s P / 40s V,I*.  See Power Monitoring Mode below for more information on customizing.
+
+***No Hass*** switch entity - Disabled by default.  Turn this switch on if not using Home Assistant with the plug.  Prevents the plug from flashing an error due to no API connection and rebooting every 15 minutes.
+
+***Scale Current*** number entity - Disabled by default.  Scales the current sensor.  Can be used to calibrate the plug.
+
+***Scale Power*** number entity - Disabled by default.  Scales the power sensor.  Can be used to calibrate the plug.
+
+***Scale Voltage*** number entity - Disabled by default.  Scales the voltage sensor.  Can be used to calibrate the plug.
+
+***Use Threshold*** number entity - Disabled by default.  Sets a threshold for the *Device in Use* binary sensor.  The binary sensor turns on if the power detected by the plug exceeds the threshold.
+
+
 ## Advanced Settings
 When using kauf-plug.yaml as a package in the ESPHome dashboard, you can configure the following aspects by adding substitutions.  The substitutions section of kauf-plug.yaml has comments with more explanation as well.
 
