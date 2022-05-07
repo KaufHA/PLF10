@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.911"
+  project_ver_num: "1.92"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -26,10 +26,11 @@ substitutions:
 
   # substitutions for button actions.  yaml dashboard import uses press, but update bin file uses hold_short to allow hold_long
   # to turn on wifi ap.  These substitutions can be overwritten in the user's yaml file to do anything.
-  sub_on_press:         script_toggle     # executes right when button is initially pressed
-  sub_on_release:       script_do_nothing # executes right when button is released
-  sub_on_release_quick: script_do_nothing # executes when button is released after being held under 750ms
-  sub_on_release_short: script_do_nothing # executes when button is released after being held between 750ms and 5s
+  sub_on_press:         script_start_timer # executes right when button is initially pressed
+  sub_on_release:       script_stop_timer  # executes right when button is released
+  sub_on_release_quick: script_do_nothing  # executes when button is released after being held under 750ms
+  sub_on_release_short: script_do_nothing  # executes when button is released after being held between 750ms and 5s
+  sub_on_release_long:  script_do_nothing  # executes when button is released after being held between 5s and 60s
   # For a longer hold, see kauf-plug-update.yaml in the config-update directory.
   # You have to start a timer in the on_press script and cancel the timer in the on_release script.
   # or if you wanted to require release, then start a counter on press and check the value on release.
@@ -60,6 +61,10 @@ substitutions:
   sub_change_mode_every: "1"
   sub_update_interval: 10s
   sub_initial_mode: CURRENT
+
+  # an extra script that, if running, will stop the relay from toggling on button release.
+  # used to not toggle when WiFi AP is re-enabled on update bin file.
+  sub_toggle_check: script_start_timer
 
 
 # https://esphome.io/components/esp8266.html
@@ -202,6 +207,10 @@ binary_sensor:
         max_length: 5s
         then:
           - script.execute: $sub_on_release_short
+      - min_length: 5s
+        max_length: 60s
+        then:
+          - script.execute: $sub_on_release_long
 
     # indicates whether plugged-in device is running based on configurable threshold.
     # https://esphome.io/components/binary_sensor/template.html
@@ -224,7 +233,7 @@ script:
           if ( (id(select_bled).state == "Power Status") || (id(select_bled).state == "Error and Power") ) {
             call.set_state(id(relay).state);
           }
-          
+
           // blue invert power status
           else if ( (id(select_bled).state == "Invert Power Status") || (id(select_bled).state == "Error and Invert Power") ) {
             call.set_state(!id(relay).state);
@@ -233,14 +242,13 @@ script:
           call.perform();
 
 
-
           call = id(red_led).make_call();
 
           // red power status
           if ( (id(select_rled).state == "Power Status") || (id(select_rled).state == "Error and Power") ) {
             call.set_state(id(relay).state);
           }
-          
+
           // red invert power status
           else if ( (id(select_rled).state == "Invert Power Status") || (id(select_rled).state == "Error and Invert Power") ) {
             call.set_state(!id(relay).state);
@@ -293,7 +301,7 @@ script:
             call.set_save(false);
             call.perform();
           }
-               
+
       - delay: 1150ms
 
       - if:
@@ -304,19 +312,63 @@ script:
           else:
             - script.execute: script_set_power_leds # done with status LED, restore light power status
 
-
     ############################################################################
     # scripts for different things the button can do:                          #
-    #  * toggle                                                                #
+    #  * start timer (on press)                                                #
+    #  * stop timer  (on release)                                              #
     #  * nothing                                                               #
     ############################################################################
-  - id: script_toggle
+  - id: script_start_timer
     then:
+
+        # variable delay before toggling plug
+      - delay: !lambda |-
+          if      ( id(select_button).state == "Toggle if Pressed For 20ms" )
+            return 20;
+          else if ( id(select_button).state == "Toggle if Released After 20ms" )
+            return 20;
+          else if ( id(select_button).state == "Toggle if Pressed For 100ms" )
+            return 100;
+          else if ( id(select_button).state == "Toggle if Released After 100ms" )
+            return 100;
+          else if ( id(select_button).state == "Toggle if Pressed For 250ms" )
+            return 250;
+          else if ( id(select_button).state == "Toggle if Released After 250ms" )
+            return 250;
+          else
+            return 1000;
+
+        # toggle immediately after delay if a "pressed" option is selected
       - if:
-          condition: # only toggle relay if button is enabled
-            lambda: return (id(select_button).state == "Enabled");
+          condition:
+            lambda: |-
+                std::size_t found = id(select_button).state.find("Press");
+                return (found != std::string::npos);
           then:
-            switch.toggle: relay
+            - switch.toggle: relay
+
+  - id: script_stop_timer
+    then:
+      
+      - if:
+          condition:    # potentially toggle if a "released" option is selected
+            lambda: |-
+                std::size_t found = id(select_button).state.find("Release");
+                return (found != std::string::npos);
+          then:
+          
+            - if:   
+                condition:
+                  or:  # do nothing if timer is still running or toggle check script is running.
+                    - script.is_running: script_start_timer
+                    - script.is_running: $sub_toggle_check
+                then:
+                  - script.execute: script_do_nothing
+                else:  # otherwise toggle relay
+                  - switch.toggle: relay
+
+        # in all cases, stop timer on button release.
+      - script.stop: script_start_timer
 
   - id: script_do_nothing
     then:
@@ -608,13 +660,20 @@ select:
 
     # option to disable button
   - platform: template
-    name: $friendly_name Button
+    name: $friendly_name Button Config
     id: select_button
     optimistic: true
     options:
-      - Enabled
-      - Disabled
-    initial_option: Enabled
+      - Toggle if Pressed For 20ms
+      - Disable Button
+      - Toggle if Pressed For 100ms
+      - Toggle if Pressed For 250ms
+      - Toggle if Pressed For 1s
+      - Toggle if Released After 20ms
+      - Toggle if Released After 100ms
+      - Toggle if Released After 250ms
+      - Toggle if Released After 1s
+    initial_option: Toggle if Pressed For 20ms
     restore_value: true
     icon: mdi:circle-double
     entity_category: config
