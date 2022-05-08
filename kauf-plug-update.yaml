@@ -1,11 +1,9 @@
 substitutions:
   project_ver_let: u
 
-  # use hold instead of press for toggle action
-  sub_on_press:         script_timer_start
-  sub_on_release:       script_timer_stop
-  sub_on_release_quick: script_toggle
-  sub_on_release_short: script_toggle
+  # don't toggle if force_ap script is started by holding 5+ seconds
+  sub_toggle_check: script_force_ap
+  sub_on_hold_5s:   script_force_ap
   
 packages:
   kauf_plug_base:
@@ -22,7 +20,11 @@ esphome:
   name_add_mac_suffix: true
 
   on_boot:
+    priority: 801 # before select entities are setup, to change default button config in precompiled firmware
     then:
+
+      # change default button config for update, allows force_ap without toggling relay
+      - lambda: select_button->set_initial_option("Toggle if Released After 20ms");
 
       # wait until ESPHome tries loading wifi credentials
       - wait_until:
@@ -72,6 +74,7 @@ wifi:
 
 captive_portal:                       # for fallback wifi hotspot
 
+
 script:
 
   - id: script_force_ap
@@ -97,13 +100,6 @@ script:
       - script.execute: blink_led
     # clear wifi credentials and reboot.  causes AP to be enabled.
 
-  - id: script_timer_start
-    then:
-      - delay: 5s
-      - script.execute: script_force_ap
-  - id: script_timer_stop
-    then:
-      - script.stop: script_timer_start
 
 button:
   - platform: template
