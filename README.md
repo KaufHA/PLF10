@@ -38,7 +38,7 @@ If using the precompiled binary or kauf-plug.yaml as a package in the ESPHome da
 
 ***Blue LED*** light entity - This is in the configuration section because the main intent is to control the blue LED's brightness.  However, you can also directly control the blue LED in automations or manually.
 
-***Blue LED*** select entity - Configures the behavior of the blue LED.  Has the following options.  Defaults to *Power Status*.
+***Blue LED Config*** select entity - Configures the behavior of the blue LED.  Has the following options.  Defaults to *Power Status*.
 - *Power Status*: LED follows relay state.
 - *No Automation*: The plug will never automatically change the LED, but the LED can still be controlled via the light entity.
 - *Invert Power Status*: LED follows the inverse of the relay's state (LED on when relay is off).
@@ -48,9 +48,9 @@ If using the precompiled binary or kauf-plug.yaml as a package in the ESPHome da
 
 ***Red LED*** light entity - Same as the Blue LED light entity, but for the Red LED.
 
-***Red LED*** select entity - Same as the Blue LED select entity, but for the Red LED.  Defaults to *Error Status*.
+***Red LED Config*** select entity - Same as the Blue LED select entity, but for the Red LED.  Defaults to *Error Status*.
 
-***Button*** select entity - If *Enabled*, pressing the button will toggle the relay.  If *Disabled*, pressing the button will not toggle the relay.
+***Button Config*** select entity - Defines when the button toggles the relay.  To disable the button toggling the relay, select the *Disable Button* option.  The other options start with a description of when the relay toggles and then an amount of time that the button must be held to toggle the relay (20ms, 100ms, 250ms, or 1s).  The relay will either *Toggle if Pressed For* the time period, meaning that the relay will toggle after the specified amount of time while the button is still being held, or *Toggle if Released After* the time period, meaning that the relay will only toggle once the button is released after being held for at least the specified amount of time.  For the precompiled binaries, an *on release* option should be selected so that the fallback Wi-Fi hotspot can be re-enabled without toggling the relay.  The purpose of increasing the time period is to eliminate spurious toggles that may happen when the button circuitry receives interference.
 
 ***Monitoring Mode*** select entity - Disabled by default.  Modifies the frequency and mode of power monitoring sensors.  Defaults to *10s P / 40s V,I*.
 - *10s P / 40s V,I* - Power is measured and reported every 10 seconds.  Current and voltage are each reported every 40 seconds, alternating such that one is reported every 20 seconds.
