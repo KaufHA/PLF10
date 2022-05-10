@@ -17,7 +17,7 @@ esphome:
 
   project:
     name: "Kauf.PLF10"
-    version: "1.91(m)"
+    version: "1.95(m)"
 
 
 wifi:
@@ -74,6 +74,9 @@ binary_sensor:
         input: true
         pullup: true
       inverted: true
+
+    filters:
+      - delayed_on: 10ms
 
     on_press:
       then:
