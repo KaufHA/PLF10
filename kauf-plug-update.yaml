@@ -24,7 +24,7 @@ esphome:
     then:
 
       # change default button config for update, allows force_ap without toggling relay
-      - lambda: select_button->set_initial_option("Toggle if Released After 20ms");
+      - lambda: select_button->set_initial_option("Toggle if Released After 100ms");
 
       # wait until ESPHome tries loading wifi credentials
       - wait_until:
