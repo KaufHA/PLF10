@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.93"
+  project_ver_num: "1.94"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -84,6 +84,10 @@ globals:
     type: int
     restore_value: no
     initial_value: '12345'
+  - id: global_press_time
+    type: int
+    restore_value: no
+    initial_value: '0'
 
 
 # https://esphome.io/components/esphome.html#adjusting-flash-writes
@@ -324,6 +328,9 @@ script:
   - id: script_start_timer
     then:
 
+        # store press time in ms
+      - lambda: id(global_press_time) = millis();
+
       - script.execute: script_5s_timer
 
         # variable delay before toggling plug
@@ -354,6 +361,9 @@ script:
 
   - id: script_stop_timer
     then:
+
+        # set duration sensor
+      - lambda: id(sensor_press_duration).publish_state(millis() - id(global_press_time));
 
       - if:
           condition:    # potentially toggle if a "released" option is selected
@@ -574,6 +584,14 @@ sensor:   # Power monitoring sensors output to Home Assistant
     update_interval: 60s
     entity_category: diagnostic
     disabled_by_default: $disable_entities
+
+  - platform: template
+    name: $friendly_name Button Press Duration
+    id: sensor_press_duration
+    entity_category: diagnostic
+    disabled_by_default: $disable_entities
+    unit_of_measurement: ms
+    icon: mdi:timer-outline
 
 
 # https://esphome.io/components/number/index.html
