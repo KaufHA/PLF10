@@ -715,20 +715,3 @@ interval:
               then:
                 - script.execute: blink_status_led
 
-
-# Current reserved flash memory:
-# 00-01: Power Monitoring Mode
-# 02-03: Relay output
-# 04-05: Use Threshold
-# 06-07: Total Daily Energy
-# 08-33: Wi-Fi Credentials
-# 34-35: Button Config select entity
-# 36-37: Blue LED select entity
-# 38-39: Red LED select entity
-# 40-41: Debounce number entity
-# 42-43: No HASS switch
-# 44-55: Blue LED light entity
-# 56-57: Scale Power
-# 58-59: Scale Current
-# 60-61: Scale Voltage
-# 62-73: Red LED light entity
