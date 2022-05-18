@@ -82,7 +82,11 @@ When using kauf-plug.yaml as a package in the ESPHome dashboard, you can configu
 
 ***disable_entities*** - Adding a substitution to redefine this to "false" will result in all entities being automatically enabled in Home Assistant.
 
-***button actions*** - _sub_on_press_, _sub_on_release_, _sub_on_release_quick_, and _sub_on_release_short_ can all be used to define scripts that will run based on button press/release/hold if you want something different than the default actions to happen.
+***button actions*** - _sub_on_press_, _sub_on_release_, _sub_on_hold_5s_ can all be used to define scripts that will run based on button press/release/hold if you want something different than the default actions to happen.  A _sub_on_hold_5s_ script will execute at the 5s mark while the button is still being held.
+
+***sub_toggle_check*** - defines a script that, if running, will stop the button from toggling on release.  Can be used to stop a button press action from occuring when a hold action executed instead.
+
+***default_button_config*** - defines the default option for the button config select entity.
 
 ***power monitoring calibration*** - all of the values used to calibrate the power monitoring calibration can be overwritten using substitutions to make the calibration more accurate.
 
