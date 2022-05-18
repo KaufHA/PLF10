@@ -4,7 +4,9 @@ substitutions:
   # don't toggle if force_ap script is started by holding 5+ seconds
   sub_toggle_check: script_force_ap
   sub_on_hold_5s:   script_force_ap
-  
+
+  default_button_config: "Toggle on Release"
+
 packages:
   kauf_plug_base:
     url: https://github.com/KaufHA/PLF10
@@ -18,35 +20,11 @@ dashboard_import:
 
 esphome:
   name_add_mac_suffix: true
-
   on_boot:
-    priority: 801 # before select entities are setup, to change default button config in precompiled firmware
     then:
-
-      # change default button config for update, allows force_ap without toggling relay
-      - lambda: select_button->set_initial_option("Toggle if Released After 100ms");
-
-      # wait until ESPHome tries loading wifi credentials
-      - wait_until:
-          lambda: return ( wifi_wificomponent->tried_loading_creds );
-
-        # enable AP if credentials couldn't be loaded or force_ap is set
-      - lambda: |-
-          if ( !wifi_wificomponent->loaded_creds || id(force_ap) ) {
-            ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi not configured, enabling ap and waiting");
-            wifi_wificomponent->set_ap_timeout(15000);
-          }
-
-      - wait_until:       # wait until wifi connects
-          wifi.connected
-      - globals.set:      # clear global so ap doesn't come back up next time
-          id: force_ap
-          value: 'false'
-
-        # set ap timeout to max 32 bit value in milliseconds.  About 3.5 weeks.
-      - lambda: |-
-          ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up");
-          wifi_wificomponent->set_ap_timeout(2147483647);
+        # implementing on_boot automation as a script makes it run in parallel with
+        # main on_boot script and any other on_boot scripts.
+      - script.execute: on_boot_wifi
 
 
 globals:
@@ -67,8 +45,9 @@ wifi:
   # by default, fast_connect is disabled.  Will automatically be enabled by wifi component
   # needs to be set false here as dashboard import version sets true
   fast_connect: false
-  
-  # add forced hash which isn't needed for dashboard import.  Allows saving wifi credentials across update.
+
+  # add forced hash in update bin file which isn't needed for dashboard import.
+  # Allows saving wifi credentials across update.
   forced_hash: 1432266978
 
 
@@ -99,6 +78,31 @@ script:
       - delay: 333ms
       - script.execute: blink_led
     # clear wifi credentials and reboot.  causes AP to be enabled.
+
+  - id: on_boot_wifi
+    then:
+
+      # wait until ESPHome tries loading wifi credentials
+      - wait_until:
+          lambda: return ( wifi_wificomponent->tried_loading_creds );
+
+        # enable AP if credentials couldn't be loaded or force_ap is set
+      - lambda: |-
+          if ( !wifi_wificomponent->loaded_creds || id(force_ap) ) {
+            ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi not configured, enabling ap and waiting");
+            wifi_wificomponent->set_ap_timeout(15000);
+          }
+
+      - wait_until:       # wait until wifi connects
+          wifi.connected
+      - globals.set:      # clear global so ap doesn't come back up next time
+          id: force_ap
+          value: 'false'  
+
+        # set ap timeout to max 32 bit value in milliseconds.  About 3.5 weeks.
+      - lambda: |-
+          ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up");
+          wifi_wificomponent->set_ap_timeout(2147483647);
 
 
 button:
