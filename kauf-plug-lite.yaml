@@ -16,7 +16,7 @@ substitutions:
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
   project_ver_num: "1.96"
-  project_ver_let: y
+  project_ver_let: l
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
   sub_restore_mode: RESTORE_DEFAULT_OFF # overwrite to change boot up behavior of relay
