@@ -6,23 +6,22 @@ substitutions:
   # in your local yaml file by redefining them.
   #
   # packages:
-  #   kauf.plf10: github://bkaufx/PLF10/kauf-plug.yaml
+  #   kauf.plf10: github://KaufHA/PLF10/kauf-plug.yaml
   #
 
   name: kauf-plug              # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
                                # **** USE DASHES (-) INSTEAD OF SPACES OR UNDERSCORE (_).  USE ONLY LOWER CASE LETTERS.     ****
-  friendly_name: Kauf Plug     # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
+  friendly_name: Kauf Plug     # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE                                   ****
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.95"
+  project_ver_num: "1.96"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
   sub_restore_mode: RESTORE_DEFAULT_OFF # overwrite to change boot up behavior of relay
 
   disable_entities: "true"     # set to "false" to have all entities show up in Home Assistant automatically
-
 
   # substitutions for button actions.  on_press and on_release implement a timer scheme with configurable delay.
   # on_hold_5s re-enables the AP and captive portal for the precompiled update binary.
@@ -33,17 +32,16 @@ substitutions:
   #   * place actions in the on_press script after the delay to perform them while still holding the button
   #   * place actions in the on_release script, with the condition that the on_press script is not running, to 
   #     perform them on release of the button.
-  sub_on_press:         script_start_timer # executes right when button is initially pressed
-  sub_on_release:       script_stop_timer  # executes right when button is released
+  sub_on_press:         script_do_nothing  # executes right when button is initially pressed
+  sub_on_release:       script_do_nothing  # executes right when button is released
   sub_on_hold_5s:       script_do_nothing  # executes right when button has been held for 5s, while button is still being held
-  sub_on_release_quick: script_do_nothing  # executes when button is released after being held under 750ms
-  sub_on_release_short: script_do_nothing  # executes when button is released after being held between 750ms and 5s
-  sub_on_release_long:  script_do_nothing  # executes when button is released after being held between 5s and 60s
 
   # an extra script that, if running, will stop the relay from toggling on button release.
   # used to not toggle when WiFi AP is re-enabled on update bin file.
-  sub_toggle_check: script_start_timer
+  sub_toggle_check: script_do_nothing
 
+  # made this a substitution so that the update bin file and yaml compiled versions can have different defaults
+  default_button_config: "Toggle on Press"
 
   # substitutions for power monitoring calibration.  Allows end users to change calibration in their yaml and still
   # incorporate this file as a package to get all the updates we release.
@@ -74,6 +72,7 @@ substitutions:
 esp8266:
   board: esp01_1m
   restore_from_flash: true
+  early_pin_init: false
   start_free: 74
   global_addr: global_forced_addr
 
@@ -106,37 +105,9 @@ esphome:
   on_boot:
     priority: 700
     then:
-
-      # priority 700 ensures power monitoring mode variables are changed
-      # in this script before HLW component is setup
-      # hlw_main will already have the YAML configured values by default, so
-      # no need to handle that here.
-      - lambda: |-
-
-          if ( id(select_monitor_mode).state == "10s P / 40s V,I") {
-            id(hlw_main)->set_update_interval(10000);
-            id(hlw_main)->set_change_mode_every(1); }
-
-          else if ( id(select_monitor_mode).state == "10s P,I Only" ) {
-            id(hlw_main)->set_update_interval(10000);
-            id(hlw_main)->set_change_mode_every(4294967295);
-            id(hlw_main)->set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_CURRENT); }
-
-          else if ( id(select_monitor_mode).state == "10s P,V Only" ) {
-            id(hlw_main)->set_update_interval(10000);
-            id(hlw_main)->set_change_mode_every(4294967295);
-            id(hlw_main)->set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); }
-
-          else if ( id(select_monitor_mode).state == " 2s P,I Only" ) {
-            id(hlw_main)->set_update_interval(2000);
-            id(hlw_main)->set_change_mode_every(4294967295);
-            id(hlw_main)->set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_CURRENT); }
-
-          else if ( id(select_monitor_mode).state == " 2s P,V Only" ) {
-            id(hlw_main)->set_update_interval(2000);
-            id(hlw_main)->set_change_mode_every(4294967295);
-            id(hlw_main)->set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); } 
-
+      # implementing on_boot function as a script so that any other on_boot automations in other files
+      # will execute in parallel and not be blocked by this one.
+      - script.execute: on_boot_main
 
 # https://esphome.io/components/external_components.html
 external_components:
@@ -198,26 +169,30 @@ binary_sensor:
         input: true
         pullup: true
       inverted: true
-
     on_press:
         then:
+          - lambda: |-
+              // store time of press and clear duration sensor
+              id(global_press_time) = millis();
+              id(sensor_press_duration).publish_state(0);
+
+              // toggle if configured for toggle on press
+              if (id(select_button).state == "Toggle on Press") {
+                id(relay).toggle(); }
           - script.execute: $sub_on_press
+          - script.execute: script_5s_timer
     on_release:
         then:
+          - lambda: |-
+              // set duration sensor
+              id(sensor_press_duration).publish_state(millis() - id(global_press_time) + id(number_debounce).state);
+
+              // toggle if configured on release and toggle check script is not running.
+              if (  (id(select_button).state == "Toggle on Release") && !id($sub_toggle_check).is_running() ) {
+                id(relay).toggle();
+              }
           - script.execute: $sub_on_release
-    on_click:
-      - min_length: 20ms
-        max_length: 750ms
-        then:
-          - script.execute: $sub_on_release_quick
-      - min_length: 750ms
-        max_length: 5s
-        then:
-          - script.execute: $sub_on_release_short
-      - min_length: 5s
-        max_length: 60s
-        then:
-          - script.execute: $sub_on_release_long
+          - script.stop: script_5s_timer
 
     # indicates whether plugged-in device is running based on configurable threshold.
     # https://esphome.io/components/binary_sensor/template.html
@@ -236,31 +211,25 @@ script:
 
           auto call = id(blue_led).make_call();
 
-          // blue power status
+          // if blue led follows power status
           if ( (id(select_bled).state == "Power Status") || (id(select_bled).state == "Error and Power") ) {
             call.set_state(id(relay).state);
           }
 
-          // blue invert power status
+          // if blue led follows inverse of power status
           else if ( (id(select_bled).state == "Invert Power Status") || (id(select_bled).state == "Error and Invert Power") ) {
             call.set_state(!id(relay).state);
           }
 
+          // if blue led is set to not change on power status (error only or disabled), performing an empty call does nothing.
           call.perform();
 
-
+          // same as blue but for red led
           call = id(red_led).make_call();
-
-          // red power status
           if ( (id(select_rled).state == "Power Status") || (id(select_rled).state == "Error and Power") ) {
-            call.set_state(id(relay).state);
-          }
-
-          // red invert power status
+            call.set_state(id(relay).state); }
           else if ( (id(select_rled).state == "Invert Power Status") || (id(select_rled).state == "Error and Invert Power") ) {
-            call.set_state(!id(relay).state);
-          }
-
+            call.set_state(!id(relay).state); }
           call.perform();
 
   - id: blink_status_led
@@ -319,83 +288,119 @@ script:
           else:
             - script.execute: script_set_power_leds # done with status LED, restore light power status
 
-    ############################################################################
-    # scripts for different things the button can do:                          #
-    #  * start timer (on press)                                                #
-    #  * stop timer  (on release)                                              #
-    #  * nothing                                                               #
-    ############################################################################
-  - id: script_start_timer
-    then:
-
-        # store press time in ms
-      - lambda: id(global_press_time) = millis();
-
-      - script.execute: script_5s_timer
-
-        # variable delay before toggling plug
-      - delay: !lambda |-
-          if      ( id(select_button).state == "Toggle if Pressed For 20ms" )
-            return 20;
-          else if ( id(select_button).state == "Toggle if Released After 20ms" )
-            return 20;
-          else if ( id(select_button).state == "Toggle if Pressed For 100ms" )
-            return 100;
-          else if ( id(select_button).state == "Toggle if Released After 100ms" )
-            return 100;
-          else if ( id(select_button).state == "Toggle if Pressed For 250ms" )
-            return 250;
-          else if ( id(select_button).state == "Toggle if Released After 250ms" )
-            return 250;
-          else
-            return 1000;
-
-        # toggle immediately after delay if a "pressed" option is selected
+  - id: script_new_debounce
+    mode: restart          # only reboot plug once number is static for 10s.  changing value again restarts timer.
+    then:                  # only do it if wifi is connected, keeps initial loading of value on boot from causing restart.
       - if:
           condition:
-            lambda: |-
-                std::size_t found = id(select_button).state.find("Press");
-                return (found != std::string::npos);
+            - wifi.connected
           then:
-            - switch.toggle: relay
-
-  - id: script_stop_timer
-    then:
-
-        # set duration sensor
-      - lambda: id(sensor_press_duration).publish_state(millis() - id(global_press_time));
-
-      - if:
-          condition:    # potentially toggle if a "released" option is selected
-            lambda: |-
-                std::size_t found = id(select_button).state.find("Release");
-                return (found != std::string::npos);
-          then:
-          
-            - if:   
-                condition:
-                  or:  # do nothing if timer is still running or toggle check script is running.
-                    - script.is_running: script_start_timer
-                    - script.is_running: $sub_toggle_check
-                then:
-                  - script.execute: script_do_nothing
-                else:  # otherwise toggle relay
-                  - switch.toggle: relay
-
-        # in all cases, stop timers on button release.
-      - script.stop: script_5s_timer
-      - script.stop: script_start_timer
-
+            - lambda: ESP_LOGD("kauf-plug.yaml","New debounce value detected, rebooting in 10 seconds to effect change.");
+            - delay: 10s
+            - button.press: restart_button
 
   - id: script_5s_timer
     then:
-      - delay: 5s
+      - delay: !lambda return (5000-id(number_debounce).state);
       - script.execute: $sub_on_hold_5s
 
   - id: script_do_nothing
     then:
       - lambda: return;
 
+  - id: on_boot_main
+    then:
+
+        # this on_boot script has to execute after select and number entities are set up, so
+        # priority < 800.  Adding a check here to make sure all needed entities are set up just
+        # in case another yaml file makes on_boot priority higher than 800 the following code
+        # will still work right.  If on_boot priority becomes <= 600, the code for setting up
+        # power monitoring mode won't work because HLW will already be set up before values are
+        # changed in this script.
+      - wait_until:
+          lambda: return (id(select_monitor_mode).has_state() &&
+                          id(select_button_old).has_state() &&
+                          id(select_button).has_state() &&
+                          id(number_debounce).has_state() );
+
+      - lambda: |-
+
+          //////////////////////////////////////////////////////////////////////
+          // implement power monitoring mode per select entity
+
+          if ( id(select_monitor_mode).state == "10s P / 40s V,I") {
+            id(hlw_main).set_update_interval(10000);
+            id(hlw_main).set_change_mode_every(1); }
+
+          else if ( id(select_monitor_mode).state == "10s P,I Only" ) {
+            id(hlw_main).set_update_interval(10000);
+            id(hlw_main).set_change_mode_every(4294967295);
+            id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_CURRENT); }
+
+          else if ( id(select_monitor_mode).state == "10s P,V Only" ) {
+            id(hlw_main).set_update_interval(10000);
+            id(hlw_main).set_change_mode_every(4294967295);
+            id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); }
+
+          else if ( id(select_monitor_mode).state == " 2s P,I Only" ) {
+            id(hlw_main).set_update_interval(2000);
+            id(hlw_main).set_change_mode_every(4294967295);
+            id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_CURRENT); }
+
+          else if ( id(select_monitor_mode).state == " 2s P,V Only" ) {
+            id(hlw_main).set_update_interval(2000);
+            id(hlw_main).set_change_mode_every(4294967295);
+            id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); } 
+
+          //////////////////////////////////////////////////////////////////////
+          // Recover legacy button config if present, delete June 1, 2023.  If
+          // you haven't updated in 1 year, you are going to lose your config, sorry.
+
+          if ( id(select_button_old).state == "Didn't Restore" ) {
+            ESP_LOGD("Kauf Config Migration", "No legacy button configuration to migrate.");
+          } else {
+            ESP_LOGD("Kauf Config Migration", "Found legacy button configuration, migrating to new format.");
+
+            // set button config select entity based on press/release/disabled
+            auto call_sel = id(select_button).make_call();
+            if ( id(select_button_old).active_index() == 1 )      { call_sel.set_option("Don't Toggle"); }
+            else if ( id(select_button_old).active_index() >= 5 ) { call_sel.set_option("Toggle on Release"); }
+            else                                                  { call_sel.set_option("Toggle on Press"); }
+            call_sel.perform();
+
+            // set number_debounce if configured for longer than 100ms.
+            std::size_t found = id(select_button_old).state.find("250ms");
+            if (found != std::string::npos) {
+              auto call_num = id(number_debounce).make_call();
+              call_num.set_value(250);
+              call_num.perform(); }
+            found = id(select_button_old).state.find("1s");
+            if (found != std::string::npos) {
+              auto call_num = id(number_debounce).make_call();
+              call_num.set_value(1000);
+              call_num.perform(); }
+
+          }
+
+          // keep old format select entity from ever trying to save over the new one.
+          id(select_button_old).set_restore_value(false);
+
+          // END SECTION TO DELETE JUNE 1, 2023
+          //////////////////////////////////////////////////////////////////////
+
+          //////////////////////////////////////////////////////////////////////
+          // add a delayed_on filter to the button binary_sensor with time argument from number_debounce.
+          // this is placed after settings recovery so that it will take into account recovered setting
+          // on first boot.  In any case, needs to be after priority 800 so that number_debounce is set up.
+
+          binary_sensor::DelayedOnFilter *button_delayedonfilter;
+          button_delayedonfilter = new binary_sensor::DelayedOnFilter(id(number_debounce).state);
+          button_delayedonfilter->set_component_source("binary_sensor");
+          App.register_component(button_delayedonfilter);
+          id(button_in).add_filters({button_delayedonfilter});
+
+
+    
 
 # pwm outputs for LEDs so they can be dimmed
 # https://esphome.io/components/output/esp8266_pwm.html
@@ -412,6 +417,7 @@ output:
     inverted: true
 
 
+# light entities for blue and red LEDs
 # https://esphome.io/components/light/index.html
 # https://esphome.io/components/light/monochromatic.html
 light:
@@ -460,12 +466,10 @@ switch:
     forced_addr: 2
     global_addr: global_forced_addr
     restore_mode: $sub_restore_mode
-
     on_turn_on:
         - script.execute: script_set_power_leds
     on_turn_off:
         - script.execute: script_set_power_leds
-
 
     # https://esphome.io/components/switch/template.html
   - platform: template
@@ -478,10 +482,10 @@ switch:
     icon: mdi:toggle-switch-off-outline
     on_turn_on:
       - lambda: |-
-          id(kauf_api)->set_reboot_timeout(0);  // 0 disables auto rebooting and also new status led blinking.  doesn't stop current status led blinking
-          id(kauf_api)->status_clear_warning(); // stops current status led blinking, timeout 0 keeps it from restarting
+          id(kauf_api).set_reboot_timeout(0);  // 0 disables auto rebooting and also new status led blinking.  doesn't stop current status led blinking
+          id(kauf_api).status_clear_warning(); // stops current status led blinking, timeout 0 keeps it from restarting
     on_turn_off:
-      - lambda: id(kauf_api)->set_reboot_timeout(900000);
+      - lambda: id(kauf_api).set_reboot_timeout(900000);
     forced_hash: 657159011
     forced_addr: 42
     global_addr: global_forced_addr
@@ -531,18 +535,8 @@ sensor:   # Power monitoring sensors output to Home Assistant
             - $power_cal_val1_in -> $power_cal_val1_out
             - $power_cal_val2_in -> $power_cal_val2_out
         - lambda: return x * id(scale_power).state/100.0f;
-      on_value:   # set or clear in_use template binary sensor depending on
-        - if:     # whether power usage is over threshold
-            condition:
-              lambda: return (x >= id(threshold).state);
-            then:
-              - binary_sensor.template.publish:
-                  id: in_use
-                  state: ON
-            else:
-              - binary_sensor.template.publish:
-                  id: in_use
-                  state: OFF
+      on_value:   # set or clear in_use template binary sensor depending on whether power usage is over threshold
+        - lambda: id(in_use).publish_state(x >= id(threshold).state);
 
     current:
       name: ${friendly_name} Current
@@ -564,7 +558,6 @@ sensor:   # Power monitoring sensors output to Home Assistant
             - $voltage_cal_val2_in -> $voltage_cal_val2_out
         - lambda: return x * id(scale_voltage).state/100.0f;
 
-
     # Reports the total Power so-far each day, resets at midnight
     # https://esphome.io/components/sensor/total_daily_energy.html
   - platform: total_daily_energy
@@ -585,6 +578,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     entity_category: diagnostic
     disabled_by_default: $disable_entities
 
+    # https://esphome.io/components/sensor/template.html
   - platform: template
     name: $friendly_name Button Press Duration
     id: sensor_press_duration
@@ -613,18 +607,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
     forced_hash: 3932521563
     forced_addr: 4
     global_addr: global_forced_addr
-    on_value:        # set or clear in_use template binary sensor depending on
-      - if:          # whether power usage is above threshold
-          condition:
-            lambda: return (id(wattage).state >= x);
-          then:
-            - binary_sensor.template.publish:
-                id: in_use
-                state: ON
-          else:
-            - binary_sensor.template.publish:
-                id: in_use
-                state: OFF
+    on_value:        # set or clear in_use template binary sensor depending on whether power usage is above threshold
+      - lambda: id(in_use).publish_state(id(wattage).state >= x);
 
   - platform: template
     name: ${friendly_name} Scale Power
@@ -642,8 +626,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
     forced_hash: 3565176138
     forced_addr: 56
     global_addr: global_forced_addr
-    on_value:
-      - lambda: id(wattage)->publish_state(id(wattage)->get_raw_state());
+    on_value:   # republish value. Sensor automation applies new scaling factor.
+      - lambda: id(wattage).publish_state(id(wattage).get_raw_state());
 
   - platform: template
     name: ${friendly_name} Scale Current
@@ -661,8 +645,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
     forced_hash: 2293595686
     forced_addr: 58
     global_addr: global_forced_addr
-    on_value:
-      - lambda: id(current)->publish_state(id(current)->get_raw_state());
+    on_value:   # republish value. Sensor automation applies new scaling factor.
+      - lambda: id(current).publish_state(id(current).get_raw_state());
 
   - platform: template
     name: ${friendly_name} Scale Voltage
@@ -680,18 +664,39 @@ number:      # used as a threshold for whether the plugged-in devices is running
     forced_hash: 254525215
     forced_addr: 60
     global_addr: global_forced_addr
-    on_value:
-      - lambda: id(voltage)->publish_state(id(voltage)->get_raw_state());
-  
+    on_value:   # republish value. Sensor automation applies new scaling factor.
+      - lambda: id(voltage).publish_state(id(voltage).get_raw_state());
+
+  - platform: template
+    name: ${friendly_name} Debounce Time
+    min_value: 50
+    max_value: 2000
+    step: 1
+    initial_value: 75
+    id: number_debounce
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "ms"
+    mode: box
+    disabled_by_default: $disable_entities
+    forced_hash: 2232959069
+    forced_addr: 40
+    global_addr: global_forced_addr
+    on_value:   # currently, have to reboot plug to apply new delayed_on time
+      - script.execute: script_new_debounce  
 
 # https://esphome.io/components/select/index.html
 # https://esphome.io/components/select/template.html
 select:
 
-    # option to disable button
+    # legacy select button configuration; remove June 1, 2023
+    # removed name, so won't show up in UI.  This is kept so that previous
+    # setting can be migrated to new select entities.
+    # new entity is saved at same address with incremented hash so once the new
+    # one is saved, this one won't be loaded next time.
   - platform: template
-    name: $friendly_name Button Config
-    id: select_button
+    id: select_button_old
     optimistic: true
     options:
       - Toggle if Pressed For 20ms
@@ -703,11 +708,26 @@ select:
       - Toggle if Released After 100ms
       - Toggle if Released After 250ms
       - Toggle if Released After 1s
-    initial_option: Toggle if Pressed For 100ms
+      - Didn't Restore
+    initial_option: Didn't Restore
+    restore_value: true
+    forced_hash: 3616613942
+    forced_addr: 34
+    global_addr: global_forced_addr
+
+  - platform: template
+    name: $friendly_name Button Config
+    id: select_button
+    optimistic: true
+    options:
+      - Toggle on Press
+      - Toggle on Release
+      - Don't Toggle
+    initial_option: $default_button_config
     restore_value: true
     icon: mdi:circle-double
     entity_category: config
-    forced_hash: 3616613942
+    forced_hash: 3616613943
     forced_addr: 34
     global_addr: global_forced_addr
 
@@ -729,7 +749,6 @@ select:
     forced_hash: 3104663617
     forced_addr: 36
     global_addr: global_forced_addr
-    
     on_value:
       then:
         - if:
@@ -757,7 +776,6 @@ select:
     forced_hash: 261191305
     forced_addr: 38
     global_addr: global_forced_addr
-    
     on_value:
       then:
         - if:
@@ -765,7 +783,6 @@ select:
               - lambda: return ( x == "Error Status" );
             then:
               - light.turn_off: red_led
-
         - script.execute: script_set_power_leds
 
   # change mode of power monitoring
@@ -785,11 +802,9 @@ select:
     icon: mdi:wrench-clock
     entity_category: config
     disabled_by_default: $disable_entities
-
     forced_hash: 1025003090
     forced_addr: 0
     global_addr: global_forced_addr
-    
     set_action:
       - delay: 1s
       - lambda: global_preferences->sync();
@@ -807,10 +822,10 @@ text_sensor:
 
 
 # emulate status_led
+# https://esphome.io/guides/automations.html#interval-component
 interval:
   - interval: 5s
     then:
-
     - if:
         condition:
           - lambda: return ( ( (App.get_app_state() & STATUS_LED_ERROR) != 0u) || ((App.get_app_state() & STATUS_LED_WARNING) != 0u) );
@@ -823,17 +838,16 @@ interval:
                 - script.execute: blink_status_led
 
 
-
 # Current reserved flash memory:
 # 00-01: Power Monitoring Mode
 # 02-03: Relay output
 # 04-05: Use Threshold
 # 06-07: Total Daily Energy
 # 08-33: Wi-Fi Credentials
-# 34-35: Disable Button select entity
+# 34-35: Button Config select entity
 # 36-37: Blue LED select entity
 # 38-39: Red LED select entity
-
+# 40-41: Debounce number entity
 # 42-43: No HASS switch
 # 44-55: Blue LED light entity
 # 56-57: Scale Power
