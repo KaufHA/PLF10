@@ -1,4 +1,4 @@
-# PLF10
+# KAUF Power Monitoring Smart Plug (PLF10)
 
 
 The recommended way to import a plug into your ESPHome dashboard is through the dashboard import feature. The plug will need to be updated to 1.83 or greater to be discovered by the ESPHome dashboard. You can accomplish the same thing without updating first by using the following yaml modified as desired.
