@@ -112,3 +112,4 @@ If you are still getting errors after upgrading the ESPHome dashboard to the lat
 ## Links
 - [Purchase plugs on Amazon](https://www.amazon.com/dp/B09JQ3LRHB)
 - [KAUF YouTube Channel](https://www.youtube.com/channel/UCjgziIA-lXmcqcMIm8HDnYg)
+- [KaufHA Website](https://kaufha.com/plf10)
