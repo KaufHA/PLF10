@@ -7,6 +7,7 @@ substitutions:
 
   default_button_config: "Toggle on Release"
 
+
 packages:
   kauf_plug_base:
     url: https://github.com/KaufHA/PLF10
@@ -39,7 +40,6 @@ wifi:
 
   # enable wifi ap, which was not needed in dashboard import version
   ap:
-    ssid: ${friendly_name} Hotspot
     ap_timeout: 2147483647ms      # maximum 32 bit value.  About 3.5 weeks in milliseconds.
 
   # by default, fast_connect is disabled.  Will automatically be enabled by wifi component
@@ -103,16 +103,3 @@ script:
       - lambda: |-
           ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up");
           wifi_wificomponent->set_ap_timeout(2147483647);
-
-
-button:
-  - platform: template
-    id: clear_wifi_button
-    name: $friendly_name Clear Wifi Credentials
-    entity_category: diagnostic
-    disabled_by_default: true
-    on_press:
-      then:
-      - lambda: wifi_wificomponent->clear_stored_creds();
-      - delay: 2s
-      - button.press: restart_button
