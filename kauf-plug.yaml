@@ -36,6 +36,9 @@ substitutions:
   sub_on_release:       script_do_nothing  # executes right when button is released
   sub_on_hold_5s:       script_do_nothing  # executes right when button has been held for 5s, while button is still being held
 
+  sub_on_turn_on:       script_do_nothing
+  sub_on_turn_off:      script_do_nothing
+
   # an extra script that, if running, will stop the relay from toggling on button release.
   # used to not toggle when WiFi AP is re-enabled on update bin file.
   sub_toggle_check: script_do_nothing
@@ -468,8 +471,10 @@ switch:
     restore_mode: $sub_restore_mode
     on_turn_on:
         - script.execute: script_set_power_leds
+        - script.execute: $sub_on_turn_on
     on_turn_off:
         - script.execute: script_set_power_leds
+        - script.execute: $sub_on_turn_off
 
     # https://esphome.io/components/switch/template.html
   - platform: template
