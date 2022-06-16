@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.963"
+  project_ver_num: "1.964"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -30,7 +30,7 @@ substitutions:
   #   * have a delay for the desired hold in the on_press script
   #   * stop the on_press script in the on_release script
   #   * place actions in the on_press script after the delay to perform them while still holding the button
-  #   * place actions in the on_release script, with the condition that the on_press script is not running, to 
+  #   * place actions in the on_release script, with the condition that the on_press script is not running, to
   #     perform them on release of the button.
   sub_on_press:         script_do_nothing  # executes right when button is initially pressed
   sub_on_release:       script_do_nothing  # executes right when button is released
@@ -127,9 +127,6 @@ wifi:
   ssid: initial_ap            # !secret wifi_ssid
   password: asdfasdfasdfasdf  # !secret wifi_password
 
-  # default is 20, 17 is recommended.
-  output_power: 17
-
   # using fast_connect as default since it is required for hidden networks.
   fast_connect: true
 
@@ -159,7 +156,7 @@ web_server:
 
 
 # https://esphome.io/components/binary_sensor/index.html
-binary_sensor:  
+binary_sensor:
 
     # button input toggles relay and thereby power led
     # https://esphome.io/components/binary_sensor/gpio.html
@@ -293,14 +290,10 @@ script:
 
   - id: script_new_debounce
     mode: restart          # only reboot plug once number is static for 10s.  changing value again restarts timer.
-    then:                  # only do it if wifi is connected, keeps initial loading of value on boot from causing restart.
-      - if:
-          condition:
-            - wifi.connected
-          then:
-            - lambda: ESP_LOGD("kauf-plug.yaml","New debounce value detected, rebooting in 10 seconds to effect change.");
-            - delay: 10s
-            - button.press: restart_button
+    then:
+      - lambda: ESP_LOGD("kauf-plug.yaml","New debounce value detected, rebooting in 10 seconds to effect change.");
+      - delay: 10s
+      - button.press: restart_button
 
   - id: script_5s_timer
     then:
@@ -353,7 +346,7 @@ script:
           else if ( id(select_monitor_mode).state == " 2s P,V Only" ) {
             id(hlw_main).set_update_interval(2000);
             id(hlw_main).set_change_mode_every(4294967295);
-            id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); } 
+            id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); }
 
           //////////////////////////////////////////////////////////////////////
           // Recover legacy button config if present, delete June 1, 2023.  If
@@ -403,7 +396,7 @@ script:
           id(button_in).add_filters({button_delayedonfilter});
 
 
-    
+
 
 # pwm outputs for LEDs so they can be dimmed
 # https://esphome.io/components/output/esp8266_pwm.html
@@ -456,7 +449,7 @@ light:
 
 
 # https://esphome.io/components/switch/index.html
-switch:    
+switch:
 
     # relay output
     # https://esphome.io/components/switch/gpio.html
@@ -527,8 +520,8 @@ sensor:   # Power monitoring sensors output to Home Assistant
     current_resistor: $current_resistor_val
     voltage_divider: $voltage_divider_val
 
-    change_mode_every: $sub_change_mode_every 
-    update_interval: $sub_update_interval 
+    change_mode_every: $sub_change_mode_every
+    update_interval: $sub_update_interval
     initial_mode: $sub_initial_mode
 
     power:
@@ -688,8 +681,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
     forced_hash: 2232959069
     forced_addr: 40
     global_addr: global_forced_addr
-    on_value:   # currently, have to reboot plug to apply new delayed_on time
-      - script.execute: script_new_debounce  
+    set_action:   # currently, have to reboot plug to apply new delayed_on time
+      - script.execute: script_new_debounce
 
 # https://esphome.io/components/select/index.html
 # https://esphome.io/components/select/template.html
