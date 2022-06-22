@@ -643,9 +643,15 @@ select:
 
             // set button config select entity based on press/release/disabled
             auto call_sel = id(select_button).make_call();
-            if ( i == 1 )      { call_sel.set_option("Don't Toggle"); }
+            if ( i == 1 )      {
+              call_sel.set_option("Don't Toggle");
+              id(select_button).set_initial_option("Don't Toggle");
+            }
             else if ( i >= 5 ) { call_sel.set_option("Toggle on Release"); }
-            else               { call_sel.set_option("Toggle on Press"); }
+            else               {
+              call_sel.set_option("Toggle on Press");
+              id(select_button).set_initial_option("Toggle on Press");
+            }
             call_sel.perform();
 
             // set number_debounce if configured for longer than 100ms.
