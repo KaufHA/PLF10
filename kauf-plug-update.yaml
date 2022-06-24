@@ -9,10 +9,7 @@ substitutions:
 
 
 packages:
-  kauf_plug_base:
-    url: https://github.com/KaufHA/PLF10
-    files: kauf-plug.yaml
-    refresh: 0s
+  kauf_plug_base: !include kauf-plug.yaml
 
 
 dashboard_import:
@@ -23,8 +20,8 @@ esphome:
   name_add_mac_suffix: true
   on_boot:
     then:
-        # implementing on_boot automation as a script makes it run in parallel with
-        # main on_boot script and any other on_boot scripts.
+        # implementing on_boot automation as a script makes it run in parallel
+        # with any other on_boot scripts.
       - script.execute: on_boot_wifi
 
 
@@ -62,8 +59,6 @@ script:
           value: 'true'
       - script.execute: blink_led
       - delay: 10s
-
-      # we have to restart because ESPHome's AP won't show the captive portal once wifi has been connected.
       - button.press: restart_button
 
     # blink LED forever.  Used when button is held to re-enable AP.  Stops blinking because plug restarts.
@@ -73,7 +68,6 @@ script:
       - light.toggle: blue_led
       - delay: 333ms
       - script.execute: blink_led
-    # clear wifi credentials and reboot.  causes AP to be enabled.
 
   - id: on_boot_wifi
     then:

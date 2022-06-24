@@ -1,17 +1,12 @@
 substitutions:
   project_ver_let: "f"
 
+
 packages:
-  kauf_plug_update:
-    url: https://github.com/KaufHA/PLF10
-    files: kauf-plug-update.yaml
-    refresh: 0s
+  kauf_plug_update: !include kauf-plug-update.yaml
 
 
 esphome:
-
-
-
   on_boot:
     then:
 
@@ -78,9 +73,9 @@ esphome:
                   - light.turn_on: blue_led
                   - delay: 50ms
 
-      
+
 globals:
-  - id: first_boot          # used to run routine at factory to confirm 
+  - id: first_boot          # used to run routine at factory to confirm
     type: bool              # correct firwmare is running.
     restore_value: yes
     initial_value: 'true'
