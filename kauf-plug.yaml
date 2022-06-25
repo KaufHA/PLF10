@@ -753,10 +753,7 @@ select:
     forced_addr: 0
     global_addr: global_forced_addr
     set_action:
-      - delay: 1s
-      - lambda: global_preferences->sync();
-      - delay: 2s
-      - button.press: restart_button
+      - script.execute: script_setting_reboot
     on_value:
       - lambda: |-
           if ( !id(global_has_powermode) ) {

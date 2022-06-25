@@ -1,1 +1,5 @@
 .esphome
+secrets.yaml
+kauf-plug-test.yaml
+kauf-plug-old.yaml
+
