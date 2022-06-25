@@ -2,7 +2,7 @@ substitutions:
 
   name: kauf-plug              # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
                                # **** USE DASHES (-) INSTEAD OF SPACES OR UNDERSCORE (_).  USE ONLY LOWER CASE LETTERS.     ****
-  
+
   friendly_name: Kauf Plug     # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
 
 
@@ -17,7 +17,7 @@ esphome:
 
   project:
     name: "Kauf.PLF10"
-    version: "1.96(m)"
+    version: "1.97(m)"
 
 
 wifi:
@@ -25,7 +25,7 @@ wifi:
   # **** ENTER WI-FI CREDENTIALS HERE, USING SECRETS.YAML RECOMMENDED ****
   ssid: initial_ap           # !secret my_wifi_ssid
   password: asdfasdfasdfasdf # !secret my_wifi_pass
-  
+
   # Uncomment below to set a static IP
   # manual_ip:
   #   static_ip: !secret kauf_bulb_ip_address
@@ -61,8 +61,8 @@ status_led:
       number: GPIO0
       inverted: true
 
-  
-binary_sensor:  
+
+binary_sensor:
 
     # button input toggles relay and thereby blue led
   - platform: gpio
@@ -83,8 +83,7 @@ binary_sensor:
         switch.toggle: relay
 
 
-
-switch:    
+switch:
 
     # blue LED follows relay power state
   - platform: gpio
@@ -98,7 +97,7 @@ switch:
     id: relay
     name: $friendly_name
     pin: GPIO4
- 
+
     # automatically make blue led equal relay state
     on_turn_on:
       - switch.turn_on: blue_led
@@ -119,15 +118,15 @@ sensor:   # Power monitoring sensors output to Home Assistant
       inverted: True
     cf_pin: GPIO5
     cf1_pin: GPIO14
-    current_resistor: 0.001 # The value of the shunt resistor for current measurement. 
-    voltage_divider: 2401   # The value of the voltage divider on the board as (R_upstream + R_downstream) / R_downstream. 
+    current_resistor: 0.001 # The value of the shunt resistor for current measurement.
+    voltage_divider: 2401   # The value of the voltage divider on the board as (R_upstream + R_downstream) / R_downstream.
     power:
       name: ${friendly_name} Power
       unit_of_measurement: W
       id: wattage
       filters:
         - calibrate_linear:
-            - 0.0 -> 0.0  
+            - 0.0 -> 0.0
             - 333.8 -> 60 # value with 60W bulb.
     current:
       name: ${friendly_name} Current
@@ -143,7 +142,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
         - calibrate_linear:
             - 0.0 -> 0.0
             - 302.1 -> 117.1 # Tested using a meter
-    change_mode_every: 1 
+    change_mode_every: 1
     update_interval: 10s # 20 second effective update rate for Power, 40 second for Current and Voltage.
 
 # Reports the total Power so-far each day, resets at midnight

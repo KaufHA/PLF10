@@ -779,6 +779,7 @@ select:
             id(global_has_powermode) = true;
           }
 
+
 # Send IP Address to HA
 # https://esphome.io/components/text_sensor/wifi_info.html
 text_sensor:
