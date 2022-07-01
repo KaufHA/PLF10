@@ -577,7 +577,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     min_value: 50
     max_value: 2000
     step: 1
-    initial_value: 75
+    initial_value: 100
     id: number_debounce
     entity_category: config
     optimistic: true
