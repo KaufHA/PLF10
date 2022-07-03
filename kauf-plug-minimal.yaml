@@ -76,7 +76,7 @@ binary_sensor:
       inverted: true
 
     filters:
-      - delayed_on: 10ms
+      - delayed_on: 100ms
 
     on_press:
       then:
