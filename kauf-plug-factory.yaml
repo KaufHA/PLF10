@@ -22,7 +22,7 @@ esphome:
             # disable button toggling relay
             - select.set:
                 id: select_button
-                option: "Disabled"
+                option: "Don't Toggle"
 
             # turn on relay to draw current
             - switch.turn_on: relay
@@ -54,7 +54,7 @@ esphome:
             # re-enable button toggling relay
             - select.set:
                 id: select_button
-                option: "Enabled"
+                option: "Toggle on Release"
 
             # delay time to save above changes
             - delay: 3s
@@ -66,16 +66,10 @@ esphome:
                 then:
                   - light.toggle: blue_led
                   - delay: 100ms
-            - while:
-                condition:
-                  binary_sensor.is_on: button_in
-                then:
-                  - light.turn_on: blue_led
-                  - delay: 50ms
 
 
 globals:
   - id: first_boot          # used to run routine at factory to confirm
-    type: bool              # correct firwmare is running.
+    type: bool              # correct firmware is running.
     restore_value: yes
     initial_value: 'true'
