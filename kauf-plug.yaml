@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.971"
+  project_ver_num: "1.972"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -102,7 +102,10 @@ globals:
 
 # https://esphome.io/components/esphome.html#adjusting-flash-writes
 preferences:
-  flash_write_interval: 3s
+  # setting interval to 5 minutes since this defines writing total daily energy to flash, which will occur
+  # every interval length 24/7/365.  Created a specific save script that is executed for things that need
+  # to save more quickly.
+  flash_write_interval: 5min
 
 
 # https://esphome.io/components/esphome.html
@@ -232,6 +235,8 @@ script:
             call.set_state(!id(relay).state); }
           call.perform();
 
+      - script.execute: script_save_changes
+
   - id: blink_status_led
     mode: queued
     then:
@@ -304,6 +309,11 @@ script:
     then:
       - lambda: return;
 
+  - id: script_save_changes
+    mode: restart
+    then:
+      - delay: 3s
+      - lambda: global_preferences->sync();
 
 # pwm outputs for LEDs so they can be dimmed
 # https://esphome.io/components/output/esp8266_pwm.html
@@ -370,9 +380,11 @@ switch:
     global_addr: global_forced_addr
     restore_mode: $sub_restore_mode
     on_turn_on:
+        - script.execute: script_save_changes
         - script.execute: script_set_power_leds
         - script.execute: $sub_on_turn_on
     on_turn_off:
+        - script.execute: script_save_changes
         - script.execute: script_set_power_leds
         - script.execute: $sub_on_turn_off
 
@@ -389,8 +401,10 @@ switch:
       - lambda: |-
           id(kauf_api).set_reboot_timeout(0);  // 0 disables auto rebooting and also new status led blinking.  doesn't stop current status led blinking
           id(kauf_api).status_clear_warning(); // stops current status led blinking, timeout 0 keeps it from restarting
+      - script.execute: script_save_changes
     on_turn_off:
       - lambda: id(kauf_api).set_reboot_timeout(900000);
+      - script.execute: script_save_changes
     forced_hash: 657159011
     forced_addr: 42
     global_addr: global_forced_addr
@@ -471,7 +485,6 @@ sensor:   # Power monitoring sensors output to Home Assistant
     filters:
         - multiply: 0.001  ## convert Wh to kWh
     unit_of_measurement: kWh
-    min_save_interval: 5min
     forced_hash: 1903527169
     forced_addr: 6
     global_addr: global_forced_addr
@@ -512,6 +525,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
     forced_hash: 3932521563
     forced_addr: 4
     global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
     on_value:        # set or clear in_use template binary sensor depending on whether power usage is above threshold
       - lambda: id(in_use).publish_state(id(wattage).state >= x);
 
@@ -531,6 +546,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
     forced_hash: 3565176138
     forced_addr: 56
     global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
     on_value:   # republish value. Sensor automation applies new scaling factor.
       - lambda: id(wattage).publish_state(id(wattage).get_raw_state());
 
@@ -550,6 +567,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
     forced_hash: 2293595686
     forced_addr: 58
     global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
     on_value:   # republish value. Sensor automation applies new scaling factor.
       - lambda: id(current).publish_state(id(current).get_raw_state());
 
@@ -569,6 +588,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
     forced_hash: 254525215
     forced_addr: 60
     global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
     on_value:   # republish value. Sensor automation applies new scaling factor.
       - lambda: id(voltage).publish_state(id(voltage).get_raw_state());
 
@@ -589,6 +610,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     forced_addr: 40
     global_addr: global_forced_addr
     set_action:   # currently rebooting plug to apply new delayed_on time
+      - script.execute: script_save_changes
       - script.execute: script_setting_reboot
     on_value:
       - lambda: |-
@@ -660,6 +682,7 @@ select:
               call_num.perform(); }
 
             // go ahead and trigger a reboot on every config restoration
+            id(script_save_changes).execute();
             id(script_setting_reboot).execute();
 
           }
@@ -679,6 +702,9 @@ select:
     forced_hash: 3616613943
     forced_addr: 34
     global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
+    
 
   - platform: template
     name: $friendly_name Blue LED Config
@@ -698,6 +724,8 @@ select:
     forced_hash: 3104663617
     forced_addr: 36
     global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
     on_value:
       - if:
           condition:
@@ -724,6 +752,8 @@ select:
     forced_hash: 261191305
     forced_addr: 38
     global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
     on_value:
       - if:
           condition:
@@ -753,6 +783,7 @@ select:
     forced_addr: 0
     global_addr: global_forced_addr
     set_action:
+      - script.execute: script_save_changes
       - script.execute: script_setting_reboot
     on_value:
       - lambda: |-
