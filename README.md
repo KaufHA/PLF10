@@ -97,6 +97,8 @@ Going to the plug's URL in a web browser and adding /reset will completely wipe 
 
 
 ## Troubleshooting
+**Plugs turning themselves on and off** - Our latest batch of smart plugs has a hardware issue making them susceptible to radio interference, which can make the ESP think that the button was pressed when it really wasn't.  To filter out these spurious presses, a debounce of 100ms was added to the button in the latest firmware release.  Please contact us if the plug is still turning itself on and off even after updating to the latest firmware version and we will warranty the plug.
+
 General troubleshooting ideas applicable to all products are located in the [Common repo's readme](https://github.com/KaufHA/common/blob/main/README.md#troubleshooting).
 
 ## Recommended Tasmota Template
