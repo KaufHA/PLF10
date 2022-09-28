@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.972"
+  project_ver_num: "1.973"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -50,6 +50,7 @@ substitutions:
   # incorporate this file as a package to get all the updates we release.
   current_resistor_val: "0.001"
   voltage_divider_val:  "2401"
+  sub_hlw_model:         HLW8012
   power_cal_val1_in:    "0.0"
   power_cal_val1_out:   "0.0"
   power_cal_val2_in:    "333.8"
@@ -69,6 +70,19 @@ substitutions:
   sub_change_mode_every: "1"
   sub_update_interval: 10s
   sub_initial_mode: CURRENT
+
+  # GPIO definitions
+  sub_pm_sel_pin:   GPIO12
+  sub_pm_cf_pin:    GPIO5
+  sub_pm_cf1_pin:   GPIO14
+  sub_button_pin:   GPIO13
+  sub_blue_led_pin: GPIO2
+  sub_red_led_pin:  GPIO0
+  sub_relay_pin:    GPIO4
+
+  # debounce specifications
+  sub_default_debounce: "100"
+  sub_min_debounce:     "50"
 
 
 # https://esphome.io/components/esp8266.html
@@ -169,7 +183,7 @@ binary_sensor:
     id: button_in
     name: $friendly_name Button
     pin:
-      number: GPIO13
+      number: $sub_button_pin
       mode:
         input: true
         pullup: true
@@ -211,7 +225,6 @@ script:
   - id: script_set_power_leds
     then:
       - lambda: |-
-
           auto call = id(blue_led).make_call();
 
           // if blue led follows power status
@@ -242,7 +255,6 @@ script:
     then:
 
       - lambda: |-
-
           // turn on blue LED if configured for error status
           if ( (id(select_bled).state == "Error Status")  ||
                (id(select_bled).state == "Error and Power") ||
@@ -264,7 +276,6 @@ script:
       - delay: 350ms
 
       - lambda: |-
-
           // turn off blue LED if configured for error status
           if ( (id(select_bled).state == "Error Status")  ||
                (id(select_bled).state == "Error and Power") ||
@@ -320,13 +331,13 @@ script:
 output:
   - platform: esp8266_pwm
     id: blue_led_pwm
-    frequency: 1000 Hz
-    pin: GPIO2
+    frequency: 200 Hz
+    pin: $sub_blue_led_pin
     inverted: true
   - platform: esp8266_pwm
     id: red_led_pwm
-    frequency: 1000 Hz
-    pin: GPIO0
+    frequency: 200 Hz
+    pin: $sub_red_led_pin
     inverted: true
 
 
@@ -373,7 +384,7 @@ switch:
   - platform: gpio
     id: relay
     name: $friendly_name
-    pin: GPIO4
+    pin: $sub_relay_pin
     entity_category: ''
     forced_hash: 41191675
     forced_addr: 2
@@ -434,16 +445,18 @@ sensor:   # Power monitoring sensors output to Home Assistant
   - platform: hlw8012
     id: hlw_main
     sel_pin:
-      number: GPIO12
+      number: $sub_pm_sel_pin
       inverted: True
-    cf_pin: GPIO5
-    cf1_pin: GPIO14
+    cf_pin: $sub_pm_cf_pin
+    cf1_pin: $sub_pm_cf1_pin
     current_resistor: $current_resistor_val
     voltage_divider: $voltage_divider_val
 
     change_mode_every: $sub_change_mode_every
     update_interval: $sub_update_interval
     initial_mode: $sub_initial_mode
+
+    model: $sub_hlw_model
 
     power:
       name: ${friendly_name} Power
@@ -595,10 +608,10 @@ number:      # used as a threshold for whether the plugged-in devices is running
 
   - platform: template
     name: ${friendly_name} Debounce Time
-    min_value: 50
+    min_value: $sub_min_debounce
     max_value: 2000
     step: 1
-    initial_value: 100
+    initial_value: $sub_default_debounce
     id: number_debounce
     entity_category: config
     optimistic: true
@@ -704,7 +717,7 @@ select:
     global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
-    
+
 
   - platform: template
     name: $friendly_name Blue LED Config
