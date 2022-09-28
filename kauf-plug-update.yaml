@@ -24,16 +24,6 @@ esphome:
         # with any other on_boot scripts.
       - script.execute: on_boot_wifi
 
-external_components:
-#   - source:
-#       type: git
-#       url: https://github.com/KaufHA/common
-#       # ref: v2022.06.21
-#     refresh: 0s
-  - source:
-      type: local
-      path: dev-common
-
 
 globals:
   - id: force_ap
@@ -97,54 +87,9 @@ script:
           wifi.connected
       - globals.set:      # clear global so ap doesn't come back up next time
           id: force_ap
-          value: 'false'
+          value: 'false'  
 
         # set ap timeout to max 32 bit value in milliseconds.  About 3.5 weeks.
       - lambda: |-
           ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up");
           wifi_wificomponent->set_ap_timeout(2147483647);
-
-# select:
-#   # default light state on boot
-#   - platform: template
-#     name: $friendly_name Power On State
-#     id: select_boot_state
-#     optimistic: true
-#     options:
-#       - "Restore Power Off State"
-#       - "Always On"
-#       - "Always Off"
-#     initial_option: Restore Power Off State
-#     restore_value: true
-#     icon: mdi:restart-alert
-#     on_value:
-#       - lambda: |-
-#           if      ( x == "Always On"  ) {
-#             // disable saving any more values in the relay flash address
-#             relay->set_restore_mode(esphome::gpio::GPIO_SWITCH_ALWAYS_ON);
-
-#             // save a "1" in the relay flash address so that gets restored next time
-#             relay->force_save(true);
-#           }
-#           else if ( x == "Always Off" ) {
-#             // disable saving any more values in the relay flash address
-#             relay->set_restore_mode(esphome::gpio::GPIO_SWITCH_ALWAYS_ON);
-
-#             // save a "0" in the relay flash address so that gets restored next time
-#             relay->force_save(false);
-#           }
-#           else
-#             relay->set_restore_mode(esphome::gpio::GPIO_SWITCH_$sub_restore_mode);
-#           //relay->write_state(id(relay));
-#       - script.execute: script_save_changes
-#       - delay: 5s
-
-#         # always go to a restoring mode after boot, we already got what we wanted out of the boot state,
-#         # this way the current state will continue to be saved no matter the setting.
-#       - lambda: relay->set_restore_mode(esphome::gpio::GPIO_SWITCH_RESTORE_DEFAULT_ON);
-
-#     entity_category: config
-#     forced_hash: 3222171394
-#     forced_addr: 74
-#     global_addr: global_forced_addr
-
