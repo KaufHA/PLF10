@@ -1,10 +1,5 @@
 substitutions:
   project_ver_let: u
-
-  # don't toggle if force_ap script is started by holding 5+ seconds
-  sub_toggle_check: script_force_ap
-  sub_on_hold_5s:   script_force_ap
-
   default_button_config: "Toggle on Release"
 
 
@@ -18,78 +13,13 @@ dashboard_import:
 
 esphome:
   name_add_mac_suffix: true
-  on_boot:
-    then:
-        # implementing on_boot automation as a script makes it run in parallel
-        # with any other on_boot scripts.
-      - script.execute: on_boot_wifi
 
 
-globals:
-  - id: force_ap
-    type: bool
-    restore_value: yes
-    initial_value: "true"
-
-
-# re-adding wifi component so that hotspot will be enabled
+# re-adding wifi component to get forced hash
 wifi:
-
-  # enable wifi ap, which was not needed in dashboard import version
-  ap:
-    ap_timeout: 2147483647ms      # maximum 32 bit value.  About 3.5 weeks in milliseconds.
 
   # add forced hash in update bin file which isn't needed for dashboard import.
   # Allows saving wifi credentials across update.
   forced_hash: 1432266978
 
 
-captive_portal:                       # for fallback wifi hotspot
-
-
-script:
-
-  - id: script_force_ap
-    then:
-      - logger.log: "------------------->>>>>>>>>>>>>>>>>   HELD BUTTON 5 SECONDS, FORCING AP"
-
-      # blink LED for 10s then restart to get captive portal to turn on.
-      - globals.set:
-          id: force_ap
-          value: 'true'
-      - script.execute: blink_led
-      - delay: 10s
-      - button.press: restart_button
-
-    # blink LED forever.  Used when button is held to re-enable AP.  Stops blinking because plug restarts.
-  - id: blink_led
-    mode: queued
-    then:
-      - light.toggle: blue_led
-      - delay: 333ms
-      - script.execute: blink_led
-
-  - id: on_boot_wifi
-    then:
-
-      # wait until ESPHome tries loading wifi credentials
-      - wait_until:
-          lambda: return ( wifi_wificomponent->tried_loading_creds );
-
-        # enable AP if credentials couldn't be loaded or force_ap is set
-      - lambda: |-
-          if ( !wifi_wificomponent->loaded_creds || id(force_ap) ) {
-            ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi not configured, enabling ap and waiting");
-            wifi_wificomponent->set_ap_timeout(15000);
-          }
-
-      - wait_until:       # wait until wifi connects
-          wifi.connected
-      - globals.set:      # clear global so ap doesn't come back up next time
-          id: force_ap
-          value: 'false'  
-
-        # set ap timeout to max 32 bit value in milliseconds.  About 3.5 weeks.
-      - lambda: |-
-          ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up");
-          wifi_wificomponent->set_ap_timeout(2147483647);

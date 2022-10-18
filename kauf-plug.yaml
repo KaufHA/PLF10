@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.973"
+  project_ver_num: "1.98"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -24,7 +24,7 @@ substitutions:
   disable_entities: "true"     # set to "false" to have all entities show up in Home Assistant automatically
 
   # substitutions for button actions.  on_press and on_release implement a timer scheme with configurable delay.
-  # on_hold_5s re-enables the AP and captive portal for the precompiled update binary.
+  # on_hold_30s re-enables the AP and captive portal for the precompiled update binary.
   # any length of hold can be implemented with just on_press and on_release using the following directions.  This
   # is basically how this yaml file works.
   #   * have a delay for the desired hold in the on_press script
@@ -34,14 +34,14 @@ substitutions:
   #     perform them on release of the button.
   sub_on_press:         script_do_nothing  # executes right when button is initially pressed
   sub_on_release:       script_do_nothing  # executes right when button is released
-  sub_on_hold_5s:       script_do_nothing  # executes right when button has been held for 5s, while button is still being held
+  sub_on_hold_30s:      script_force_ap    # executes right when button has been held for 5s, while button is still being held
 
   sub_on_turn_on:       script_do_nothing
   sub_on_turn_off:      script_do_nothing
 
   # an extra script that, if running, will stop the relay from toggling on button release.
   # used to not toggle when WiFi AP is re-enabled on update bin file.
-  sub_toggle_check: script_do_nothing
+  sub_toggle_check: script_force_ap
 
   # made this a substitution so that the update bin file and yaml compiled versions can have different defaults
   default_button_config: "Toggle on Press"
@@ -130,6 +130,12 @@ esphome:
     name: $project_name
     version: $project_ver_num($project_ver_let)
 
+  on_boot:
+    then:
+        # implementing on_boot automation as a script makes it run in parallel
+        # with any other on_boot scripts.
+      - script.execute: on_wifi_connect
+
 
 # https://esphome.io/components/external_components.html
 external_components:
@@ -150,8 +156,15 @@ wifi:
   # using fast_connect as default since it is required for hidden networks.
   fast_connect: true
 
+  # enable wifi ap with ridiculous timeout so it does not normally turn on.
+  ap:
+    ap_timeout: 2147483647ms  # maximum 32 bit value.  About 3.5 weeks in milliseconds.
+
   forced_addr: 8
   global_addr: global_forced_addr
+
+
+captive_portal:                       # for fallback wifi hotspot
 
 
 # https://esphome.io/components/logger.html
@@ -198,7 +211,7 @@ binary_sensor:
           if (id(select_button).state == "Toggle on Press") {
             id(relay).toggle(); }
       - script.execute: $sub_on_press
-      - script.execute: script_5s_timer
+      - script.execute: script_30s_timer
     on_release:
       - lambda: |-
           // set duration sensor
@@ -209,7 +222,7 @@ binary_sensor:
             id(relay).toggle();
           }
       - script.execute: $sub_on_release
-      - script.stop: script_5s_timer
+      - script.stop: script_30s_timer
 
     # indicates whether plugged-in device is running based on configurable threshold.
     # https://esphome.io/components/binary_sensor/template.html
@@ -311,10 +324,40 @@ script:
       - delay: 10s
       - button.press: restart_button
 
-  - id: script_5s_timer
+  - id: script_30s_timer
     then:
-      - delay: !lambda return (5000-id(number_debounce).state);
-      - script.execute: $sub_on_hold_5s
+      - delay: !lambda return (30000-id(number_debounce).state);
+      - script.execute: $sub_on_hold_30s
+
+  - id: on_wifi_connect
+    then:
+
+        # wait until wifi connects
+      - wait_until: wifi.connected
+
+      - lambda: |-
+          ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up");
+          wifi_wificomponent->set_ap_timeout(2147483647);
+
+  - id: script_force_ap
+    then:
+      - logger.log: "------------------->>>>>>>>>>>>>>>>>   HELD BUTTON 30 SECONDS, FORCING AP"
+
+      # overwrite software defined credentials to force ap to turn on.
+      - lambda: wifi::global_wifi_component->save_wifi_sta("initial_ap","asdfasdfasdfasdf");
+
+      # blink LED for 10s then restart to get captive portal to turn on.
+      - script.execute: blink_led
+      - delay: 10s
+      - button.press: restart_button
+
+    # blink LED forever.  Used when button is held to re-enable AP.  Stops blinking because plug restarts.
+  - id: blink_led
+    mode: queued
+    then:
+      - light.toggle: blue_led
+      - delay: 333ms
+      - script.execute: blink_led
 
   - id: script_do_nothing
     then:

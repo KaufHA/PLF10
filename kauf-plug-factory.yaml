@@ -9,7 +9,12 @@ packages:
 esphome:
   on_boot:
     then:
+      - script.execute: script_factory_test
 
+
+script:
+  - id: script_factory_test
+    then:
       # little sequence so factory can confirm firwmare is working.
       - if:
           condition:
@@ -69,7 +74,7 @@ esphome:
 
 
 globals:
-  - id: first_boot          # used to run routine at factory to confirm
-    type: bool              # correct firmware is running.
+  - id: first_boot          # used to run test routine at factory
+    type: bool
     restore_value: yes
     initial_value: 'true'
