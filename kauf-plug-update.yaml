@@ -21,5 +21,3 @@ wifi:
   # add forced hash in update bin file which isn't needed for dashboard import.
   # Allows saving wifi credentials across update.
   forced_hash: 1432266978
-
-
