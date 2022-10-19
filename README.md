@@ -50,7 +50,7 @@ If using the precompiled binary or kauf-plug.yaml as a package in the ESPHome da
 
 ***Red LED Config*** select entity - Same as the Blue LED select entity, but for the Red LED.  Defaults to *Error Status*.
 
-***Button Config*** select entity - Defines when the button toggles the relay.  To disable the button toggling the relay, select the *Don't Toggle* option.  Otherwise, you can select the relay to toggle either on press or on release of the button.  Toggle on release might be desired in order to have a different action performed when the button is held for certain amount of time.  For instance, the precompiled binary defaults to toggling on release so that the toggle can be blocked in case the button is held for 5 seconds to reenable the Wi-Fi AP.
+***Button Config*** select entity - Defines when the button toggles the relay.  To disable the button toggling the relay, select the *Don't Toggle* option.  Otherwise, you can select the relay to toggle either on press or on release of the button.  Toggle on release might be desired in order to have a different action performed when the button is held for certain amount of time.  For instance, the precompiled binary defaults to toggling on release so that the toggle can be blocked in case the button is held for 30 seconds to reenable the Wi-Fi AP.
 
 ***Debounce Time*** number entity - Defines an amount of time that the button needs to be held before toggling the relay.
 
@@ -82,7 +82,7 @@ When using kauf-plug.yaml as a package in the ESPHome dashboard, you can configu
 
 ***disable_entities*** - Adding a substitution to redefine this to "false" will result in all entities being automatically enabled in Home Assistant.
 
-***button actions*** - _sub_on_press_, _sub_on_release_, _sub_on_hold_5s_ can all be used to define scripts that will run based on button press/release/hold if you want something different than the default actions to happen.  A _sub_on_hold_5s_ script will execute at the 5s mark while the button is still being held.
+***button actions*** - _sub_on_press_ and _sub_on_release_ can be used to define scripts that will run based on button press and release if you want something different than the default actions to happen.
 
 ***sub_toggle_check*** - defines a script that, if running, will stop the button from toggling on release.  Can be used to stop a button press action from occuring when a hold action executed instead.
 
@@ -94,6 +94,9 @@ When using kauf-plug.yaml as a package in the ESPHome dashboard, you can configu
 
 ## Factory Reset
 Going to the plug's URL in a web browser and adding /reset will completely wipe all settings from flash memory.  Note that this will wipe the plug's memory of whether the relay was on or off, and therefore the plug may turn off.
+
+## Clearing Wi-Fi Credentials, Getting Wi-Fi AP to Reconfigure Credentials
+Holding the plug's button for 30 seconds will clear any programmed Wi-Fi credentials, including any hard-coded via yaml configuration, and cause the plug to put its Wi-Fi AP back up.  Going to the plug's URL in a web browser and adding /clear will do the same thing.  No other setting will be lost.
 
 
 ## Troubleshooting
