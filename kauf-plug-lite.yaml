@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.97"
+  project_ver_num: "1.98"
   project_ver_let: l
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -24,7 +24,7 @@ substitutions:
   disable_entities: "true"     # set to "false" to have all entities show up in Home Assistant automatically
 
   # substitutions for button actions.  on_press and on_release implement a timer scheme with configurable delay.
-  # on_hold_5s re-enables the AP and captive portal for the precompiled update binary.
+  # on_hold_30s re-enables the AP and captive portal for the precompiled update binary.
   # any length of hold can be implemented with just on_press and on_release using the following directions.  This
   # is basically how this yaml file works.
   #   * have a delay for the desired hold in the on_press script
@@ -34,14 +34,14 @@ substitutions:
   #     perform them on release of the button.
   sub_on_press:         script_do_nothing  # executes right when button is initially pressed
   sub_on_release:       script_do_nothing  # executes right when button is released
-  sub_on_hold_5s:       script_do_nothing  # executes right when button has been held for 5s, while button is still being held
+  sub_on_hold_30s:      script_force_ap    # executes right when button has been held for 5s, while button is still being held
 
   sub_on_turn_on:       script_do_nothing
   sub_on_turn_off:      script_do_nothing
 
   # an extra script that, if running, will stop the relay from toggling on button release.
   # used to not toggle when WiFi AP is re-enabled on update bin file.
-  sub_toggle_check: script_do_nothing
+  sub_toggle_check: script_force_ap
 
   # made this a substitution so that the update bin file and yaml compiled versions can have different defaults
   default_button_config: "Toggle on Press"
@@ -50,6 +50,7 @@ substitutions:
   # incorporate this file as a package to get all the updates we release.
   current_resistor_val: "0.001"
   voltage_divider_val:  "2401"
+  sub_hlw_model:         HLW8012
   power_cal_val1_in:    "0.0"
   power_cal_val1_out:   "0.0"
   power_cal_val2_in:    "333.8"
@@ -69,6 +70,19 @@ substitutions:
   sub_change_mode_every: "1"
   sub_update_interval: 10s
   sub_initial_mode: CURRENT
+
+  # GPIO definitions
+  sub_pm_sel_pin:   GPIO12
+  sub_pm_cf_pin:    GPIO5
+  sub_pm_cf1_pin:   GPIO14
+  sub_button_pin:   GPIO13
+  sub_blue_led_pin: GPIO2
+  sub_red_led_pin:  GPIO0
+  sub_relay_pin:    GPIO4
+
+  # debounce specifications
+  sub_default_debounce: "100"
+  sub_min_debounce:     "50"
 
 
 # https://esphome.io/components/esp8266.html
@@ -96,7 +110,10 @@ globals:
 
 # https://esphome.io/components/esphome.html#adjusting-flash-writes
 preferences:
-  flash_write_interval: 3s
+  # setting interval to 5 minutes since this defines writing total daily energy to flash, which will occur
+  # every interval length 24/7/365.  Created a specific save script that is executed for things that need
+  # to save more quickly.
+  flash_write_interval: 5min
 
 
 # https://esphome.io/components/esphome.html
@@ -106,6 +123,12 @@ esphome:
   project:
     name: $project_name
     version: $project_ver_num($project_ver_let)
+
+  on_boot:
+    then:
+        # implementing on_boot automation as a script makes it run in parallel
+        # with any other on_boot scripts.
+      - script.execute: on_wifi_connect
 
 
 # https://esphome.io/components/wifi.html
@@ -120,6 +143,13 @@ wifi:
 
   # using fast_connect as default since it is required for hidden networks.
   fast_connect: true
+
+  # enable wifi ap with ridiculous timeout so it does not normally turn on.
+  ap:
+    ap_timeout: 2147483647ms  # maximum 32 bit value.  About 3.5 weeks in milliseconds.
+
+
+captive_portal:                       # for fallback wifi hotspot
 
 
 # https://esphome.io/components/logger.html
@@ -151,7 +181,7 @@ binary_sensor:
     id: button_in
     name: $friendly_name Button
     pin:
-      number: GPIO13
+      number: $sub_button_pin
       mode:
         input: true
         pullup: true
@@ -166,7 +196,7 @@ binary_sensor:
           if (id(select_button).state == "Toggle on Press") {
             id(relay).toggle(); }
       - script.execute: $sub_on_press
-      - script.execute: script_5s_timer
+      - script.execute: script_30s_timer
     on_release:
       - lambda: |-
           // set duration sensor
@@ -177,7 +207,7 @@ binary_sensor:
             id(relay).toggle();
           }
       - script.execute: $sub_on_release
-      - script.stop: script_5s_timer
+      - script.stop: script_30s_timer
 
     # indicates whether plugged-in device is running based on configurable threshold.
     # https://esphome.io/components/binary_sensor/template.html
@@ -193,7 +223,6 @@ script:
   - id: script_set_power_leds
     then:
       - lambda: |-
-
           auto call = id(blue_led).make_call();
 
           // if blue led follows power status
@@ -217,12 +246,13 @@ script:
             call.set_state(!id(relay).state); }
           call.perform();
 
+      - script.execute: script_save_changes
+
   - id: blink_status_led
     mode: queued
     then:
 
       - lambda: |-
-
           // turn on blue LED if configured for error status
           if ( (id(select_bled).state == "Error Status")  ||
                (id(select_bled).state == "Error and Power") ||
@@ -244,7 +274,6 @@ script:
       - delay: 350ms
 
       - lambda: |-
-
           // turn off blue LED if configured for error status
           if ( (id(select_bled).state == "Error Status")  ||
                (id(select_bled).state == "Error and Power") ||
@@ -280,14 +309,50 @@ script:
       - delay: 10s
       - button.press: restart_button
 
-  - id: script_5s_timer
+  - id: script_30s_timer
     then:
-      - delay: !lambda return (5000-id(number_debounce).state);
-      - script.execute: $sub_on_hold_5s
+      - delay: !lambda return (30000-id(number_debounce).state);
+      - script.execute: $sub_on_hold_30s
+
+  - id: on_wifi_connect
+    then:
+
+        # wait until wifi connects
+      - wait_until: wifi.connected
+
+      - lambda: |-
+          ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up");
+          wifi_wificomponent->set_ap_timeout(2147483647);
+
+  - id: script_force_ap
+    then:
+      - logger.log: "------------------->>>>>>>>>>>>>>>>>   HELD BUTTON 30 SECONDS, FORCING AP"
+
+      # overwrite software defined credentials to force ap to turn on.
+      - lambda: wifi::global_wifi_component->save_wifi_sta("initial_ap","asdfasdfasdfasdf");
+
+      # blink LED for 10s then restart to get captive portal to turn on.
+      - script.execute: blink_led
+      - delay: 10s
+      - button.press: restart_button
+
+    # blink LED forever.  Used when button is held to re-enable AP.  Stops blinking because plug restarts.
+  - id: blink_led
+    mode: queued
+    then:
+      - light.toggle: blue_led
+      - delay: 333ms
+      - script.execute: blink_led
 
   - id: script_do_nothing
     then:
       - lambda: return;
+
+  - id: script_save_changes
+    mode: restart
+    then:
+      - delay: 3s
+      - lambda: global_preferences->sync();
 
 
 # pwm outputs for LEDs so they can be dimmed
@@ -295,13 +360,13 @@ script:
 output:
   - platform: esp8266_pwm
     id: blue_led_pwm
-    frequency: 1000 Hz
-    pin: GPIO2
+    frequency: 200 Hz
+    pin: $sub_blue_led_pin
     inverted: true
   - platform: esp8266_pwm
     id: red_led_pwm
-    frequency: 1000 Hz
-    pin: GPIO0
+    frequency: 200 Hz
+    pin: $sub_red_led_pin
     inverted: true
 
 
@@ -342,13 +407,15 @@ switch:
   - platform: gpio
     id: relay
     name: $friendly_name
-    pin: GPIO4
+    pin: $sub_relay_pin
     entity_category: ''
     restore_mode: $sub_restore_mode
     on_turn_on:
+        - script.execute: script_save_changes
         - script.execute: script_set_power_leds
         - script.execute: $sub_on_turn_on
     on_turn_off:
+        - script.execute: script_save_changes
         - script.execute: script_set_power_leds
         - script.execute: $sub_on_turn_off
 
@@ -365,8 +432,10 @@ switch:
       - lambda: |-
           id(kauf_api).set_reboot_timeout(0);  // 0 disables auto rebooting and also new status led blinking.  doesn't stop current status led blinking
           id(kauf_api).status_clear_warning(); // stops current status led blinking, timeout 0 keeps it from restarting
+      - script.execute: script_save_changes
     on_turn_off:
       - lambda: id(kauf_api).set_reboot_timeout(900000);
+      - script.execute: script_save_changes
 
 
 # https://esphome.io/components/button/index.html
@@ -393,16 +462,18 @@ sensor:   # Power monitoring sensors output to Home Assistant
   - platform: hlw8012
     id: hlw_main
     sel_pin:
-      number: GPIO12
+      number: $sub_pm_sel_pin
       inverted: True
-    cf_pin: GPIO5
-    cf1_pin: GPIO14
+    cf_pin: $sub_pm_cf_pin
+    cf1_pin: $sub_pm_cf1_pin
     current_resistor: $current_resistor_val
     voltage_divider: $voltage_divider_val
 
     change_mode_every: $sub_change_mode_every
     update_interval: $sub_update_interval
     initial_mode: $sub_initial_mode
+
+    model: $sub_hlw_model
 
     power:
       name: ${friendly_name} Power
@@ -444,7 +515,6 @@ sensor:   # Power monitoring sensors output to Home Assistant
     filters:
         - multiply: 0.001  ## convert Wh to kWh
     unit_of_measurement: kWh
-    min_save_interval: 5min
 
     # https://esphome.io/components/sensor/uptime.html
   - platform: uptime
@@ -479,6 +549,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
     unit_of_measurement: Watt(s)
     mode: box
     disabled_by_default: $disable_entities
+    set_action:
+      - script.execute: script_save_changes
     on_value:        # set or clear in_use template binary sensor depending on whether power usage is above threshold
       - lambda: id(in_use).publish_state(id(wattage).state >= x);
 
@@ -495,6 +567,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
     unit_of_measurement: "%"
     mode: box
     disabled_by_default: $disable_entities
+    set_action:
+      - script.execute: script_save_changes
     on_value:   # republish value. Sensor automation applies new scaling factor.
       - lambda: id(wattage).publish_state(id(wattage).get_raw_state());
 
@@ -511,6 +585,8 @@ number:      # used as a threshold for whether the plugged-in devices is running
     unit_of_measurement: "%"
     mode: box
     disabled_by_default: $disable_entities
+    set_action:
+      - script.execute: script_save_changes
     on_value:   # republish value. Sensor automation applies new scaling factor.
       - lambda: id(current).publish_state(id(current).get_raw_state());
 
@@ -527,15 +603,17 @@ number:      # used as a threshold for whether the plugged-in devices is running
     unit_of_measurement: "%"
     mode: box
     disabled_by_default: $disable_entities
+    set_action:
+      - script.execute: script_save_changes
     on_value:   # republish value. Sensor automation applies new scaling factor.
       - lambda: id(voltage).publish_state(id(voltage).get_raw_state());
 
   - platform: template
     name: ${friendly_name} Debounce Time
-    min_value: 50
+    min_value: $sub_min_debounce
     max_value: 2000
     step: 1
-    initial_value: 75
+    initial_value: $sub_default_debounce
     id: number_debounce
     entity_category: config
     optimistic: true
@@ -544,6 +622,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     mode: box
     disabled_by_default: $disable_entities
     set_action:   # currently rebooting plug to apply new delayed_on time
+      - script.execute: script_save_changes
       - script.execute: script_setting_reboot
     on_value:
       - lambda: |-
@@ -573,6 +652,8 @@ select:
     restore_value: true
     icon: mdi:circle-double
     entity_category: config
+    set_action:
+      - script.execute: script_save_changes
 
   - platform: template
     name: $friendly_name Blue LED Config
@@ -589,6 +670,8 @@ select:
     initial_option: Power Status
     restore_value: true
     icon: mdi:led-on
+    set_action:
+      - script.execute: script_save_changes
     on_value:
       - if:
           condition:
@@ -612,6 +695,8 @@ select:
     initial_option: Error Status
     restore_value: true
     icon: mdi:led-on
+    set_action:
+      - script.execute: script_save_changes
     on_value:
       - if:
           condition:
@@ -638,6 +723,7 @@ select:
     entity_category: config
     disabled_by_default: $disable_entities
     set_action:
+      - script.execute: script_save_changes
       - script.execute: script_setting_reboot
     on_value:
       - lambda: |-

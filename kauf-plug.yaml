@@ -369,6 +369,7 @@ script:
       - delay: 3s
       - lambda: global_preferences->sync();
 
+
 # pwm outputs for LEDs so they can be dimmed
 # https://esphome.io/components/output/esp8266_pwm.html
 output:
@@ -760,7 +761,6 @@ select:
     global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
-
 
   - platform: template
     name: $friendly_name Blue LED Config

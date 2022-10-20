@@ -5,6 +5,39 @@ substitutions:
 
   friendly_name: Kauf Plug     # **** CHANGE FRIENDLY NAME TO SOMETHING UNIQUE PER DEVICE ****
 
+  # substitutions for power monitoring calibration.  Allows end users to change calibration in their yaml and still
+  # incorporate this file as a package to get all the updates we release.
+  current_resistor_val: "0.001"
+  voltage_divider_val:  "2401"
+  sub_hlw_model:         HLW8012
+  power_cal_val1_in:    "0.0"
+  power_cal_val1_out:   "0.0"
+  power_cal_val2_in:    "333.8"
+  power_cal_val2_out:   "60"
+  current_cal_val1_in:  "0.0"
+  current_cal_val1_out: "0.0"
+  current_cal_val2_in:  "0.6"
+  current_cal_val2_out: "0.515"
+  voltage_cal_val1_in:  "0.0"
+  voltage_cal_val1_out: "0.0"
+  voltage_cal_val2_in:  "302.1"
+  voltage_cal_val2_out: "117.1"
+
+  # set power monitoring mode in yaml, selecting the "yaml_configured" option in the select entity will cause these
+  # values to be used after next reboot.
+  # https://esphome.io/components/sensor/hlw8012.html#configuration-variables
+  sub_change_mode_every: "1"
+  sub_update_interval: 10s
+  sub_initial_mode: CURRENT
+
+  # GPIO definitions
+  sub_pm_sel_pin:   GPIO12
+  sub_pm_cf_pin:    GPIO5
+  sub_pm_cf1_pin:   GPIO14
+  sub_button_pin:   GPIO13
+  sub_blue_led_pin: GPIO2
+  sub_red_led_pin:  GPIO0
+  sub_relay_pin:    GPIO4
 
 esphome:
 
@@ -17,7 +50,7 @@ esphome:
 
   project:
     name: "Kauf.PLF10"
-    version: "1.97(m)"
+    version: "1.98(m)"
 
 
 wifi:
@@ -26,17 +59,6 @@ wifi:
   ssid: initial_ap           # !secret my_wifi_ssid
   password: asdfasdfasdfasdf # !secret my_wifi_pass
 
-  # Uncomment below to set a static IP
-  # manual_ip:
-  #   static_ip: !secret kauf_bulb_ip_address
-  #   gateway: !secret wifi_gateway
-  #   subnet: !secret wifi_subnet
-  #   dns1: !secret wifi_dns1
-
-  # use_address allows wireless programming through the ESPHome dashboard.
-  # Set to the plug's IP Address.  Remove after programming.
-  # use_address: 192.168.1.3
-
   # default is 20, 17 is recommended.
   output_power: 17
 
@@ -44,15 +66,12 @@ wifi:
   # feel free to change or override.
   fast_connect: true
 
+
 logger:                               # Enable logging
-#  baud_rate: 0                       # Disable UART logging since TX pad not easily available
 
 api:                                  # Enable Home Assistant API
-  # password: !secret api_password    # optional password field for Home Assistant API.
 
 ota:
-  # password: !secret ota_password    # optional password for OTA updates.
-
 
 
 # red led, blink when not connected to wifi or Home Assistant
@@ -67,7 +86,7 @@ binary_sensor:
     # button input toggles relay and thereby blue led
   - platform: gpio
     id: button
-    name: Kauf Plug Button
+    name: $friendly_name Button
     pin:
       number: GPIO13
       mode:
@@ -111,42 +130,55 @@ time:
     id: homeassistant_time
 
 
+# https://esphome.io/components/sensor/index.html
 sensor:   # Power monitoring sensors output to Home Assistant
+
+    # https://esphome.io/components/sensor/hlw8012.html
   - platform: hlw8012
+    id: hlw_main
     sel_pin:
-      number: GPIO12
+      number: $sub_pm_sel_pin
       inverted: True
-    cf_pin: GPIO5
-    cf1_pin: GPIO14
-    current_resistor: 0.001 # The value of the shunt resistor for current measurement.
-    voltage_divider: 2401   # The value of the voltage divider on the board as (R_upstream + R_downstream) / R_downstream.
+    cf_pin: $sub_pm_cf_pin
+    cf1_pin: $sub_pm_cf1_pin
+    current_resistor: $current_resistor_val
+    voltage_divider: $voltage_divider_val
+
+    change_mode_every: $sub_change_mode_every
+    update_interval: $sub_update_interval
+    initial_mode: $sub_initial_mode
+
+    model: $sub_hlw_model
+
     power:
       name: ${friendly_name} Power
       unit_of_measurement: W
       id: wattage
       filters:
         - calibrate_linear:
-            - 0.0 -> 0.0
-            - 333.8 -> 60 # value with 60W bulb.
+            - $power_cal_val1_in -> $power_cal_val1_out
+            - $power_cal_val2_in -> $power_cal_val2_out
+
     current:
       name: ${friendly_name} Current
       unit_of_measurement: A
+      id: current
       filters:
         - calibrate_linear:
-            - 0.0 -> 0.0
-            - 0.6 -> 0.515  # value with 60W bulb.
+            - $current_cal_val1_in -> $current_cal_val1_out
+            - $current_cal_val2_in -> $current_cal_val2_out
+
     voltage:
       name: ${friendly_name} Voltage
       unit_of_measurement: V
+      id: voltage
       filters:
         - calibrate_linear:
-            - 0.0 -> 0.0
-            - 302.1 -> 117.1 # Tested using a meter
-    change_mode_every: 1
-    update_interval: 10s # 20 second effective update rate for Power, 40 second for Current and Voltage.
+            - $voltage_cal_val1_in -> $voltage_cal_val1_out
+            - $voltage_cal_val2_in -> $voltage_cal_val2_out
 
-# Reports the total Power so-far each day, resets at midnight
-# See https://esphome.io/components/sensor/total_daily_energy.html
+    # Reports the total Power so-far each day, resets at midnight
+    # https://esphome.io/components/sensor/total_daily_energy.html
   - platform: total_daily_energy
     name: ${friendly_name} Total Daily Energy
     power_id: wattage
