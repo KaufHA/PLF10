@@ -6,7 +6,7 @@ substitutions:
   # in your local yaml file by redefining them.
   #
   # packages:
-  #   kauf.plf10: github://KaufHA/PLF10/kauf-plug.yaml
+  #   kauf.plf10: github://KaufHA/PLF10/kauf-plug-lite.yaml
   #
 
   name: kauf-plug              # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
