@@ -164,7 +164,8 @@ wifi:
   global_addr: global_forced_addr
 
 
-captive_portal:                       # for fallback wifi hotspot
+# https://esphome.io/components/captive_portal.html
+captive_portal:
 
 
 # https://esphome.io/components/logger.html

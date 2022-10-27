@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.98"
+  project_ver_num: "1.983"
   project_ver_let: l
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -149,7 +149,8 @@ wifi:
     ap_timeout: 2147483647ms  # maximum 32 bit value.  About 3.5 weeks in milliseconds.
 
 
-captive_portal:                       # for fallback wifi hotspot
+# https://esphome.io/components/captive_portal.html
+captive_portal:
 
 
 # https://esphome.io/components/logger.html
@@ -169,7 +170,7 @@ ota:
 
 # https://esphome.io/components/web_server.html
 web_server:
-  local: true
+  # local: true
 
 
 # https://esphome.io/components/binary_sensor/index.html

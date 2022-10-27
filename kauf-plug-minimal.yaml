@@ -1,3 +1,4 @@
+# https://esphome.io/guides/configuration-types.html#substitutions
 substitutions:
 
   name: kauf-plug              # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
@@ -39,6 +40,8 @@ substitutions:
   sub_red_led_pin:  GPIO0
   sub_relay_pin:    GPIO4
 
+
+# https://esphome.io/components/esphome.html
 esphome:
 
   name: $name
@@ -48,11 +51,13 @@ esphome:
 
   esp8266_restore_from_flash: true
 
+  # https://esphome.io/components/esphome.html#esphome-creators-project
   project:
     name: "Kauf.PLF10"
-    version: "1.98(m)"
+    version: "1.983(m)"
 
 
+# https://esphome.io/components/wifi.html
 wifi:
 
   # **** ENTER WI-FI CREDENTIALS HERE, USING SECRETS.YAML RECOMMENDED ****
@@ -66,14 +71,17 @@ wifi:
   # feel free to change or override.
   fast_connect: true
 
-
-logger:                               # Enable logging
-
-api:                                  # Enable Home Assistant API
-
-ota:
+  ap:
 
 
+captive_portal:   # https://esphome.io/components/captive_portal.html
+web_server:       # https://esphome.io/components/web_server.html
+logger:           # https://esphome.io/components/logger.html
+api:              # https://esphome.io/components/api.html
+ota:              # https://esphome.io/components/ota.html
+
+
+# https://esphome.io/components/status_led.html
 # red led, blink when not connected to wifi or Home Assistant
 status_led:
     pin:
@@ -81,9 +89,11 @@ status_led:
       inverted: true
 
 
+# https://esphome.io/components/binary_sensor/index.html
 binary_sensor:
 
     # button input toggles relay and thereby blue led
+    # https://esphome.io/components/binary_sensor/gpio.html
   - platform: gpio
     id: button
     name: $friendly_name Button
@@ -102,6 +112,8 @@ binary_sensor:
         switch.toggle: relay
 
 
+# https://esphome.io/components/switch/index.html
+# https://esphome.io/components/switch/gpio.html
 switch:
 
     # blue LED follows relay power state
@@ -125,6 +137,7 @@ switch:
 
 
 # clock input from Home Assistant used to calculate total daily energy
+# https://esphome.io/components/time.html#home-assistant-time-source
 time:
   - platform: homeassistant
     id: homeassistant_time
