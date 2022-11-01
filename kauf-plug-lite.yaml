@@ -15,11 +15,11 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.983"
+  project_ver_num: "1.99"
   project_ver_let: l
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
-  sub_restore_mode: RESTORE_DEFAULT_OFF # overwrite to change boot up behavior of relay
+  sub_restore_mode: RESTORE_DEFAULT_ON  # overwrite to change boot up behavior of relay
 
   disable_entities: "true"     # set to "false" to have all entities show up in Home Assistant automatically
 
@@ -128,6 +128,7 @@ esphome:
     then:
         # implementing on_boot automation as a script makes it run in parallel
         # with any other on_boot scripts.
+      - script.execute: script_set_power_leds
       - script.execute: on_wifi_connect
 
 
@@ -750,6 +751,38 @@ select:
               id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); }
             id(global_has_powermode) = true;
           }
+
+  - platform: template
+    name: $friendly_name Boot State
+    id: select_boot_state
+    optimistic: true
+    options:
+      - "Restore Power Off State"
+      - "Invert Power Off State"
+      - "Always On"
+      - "Always Off"
+      - "YAML Configured ($sub_restore_mode)"
+    initial_option: "Restore Power Off State"
+    restore_value: true
+    icon: mdi:restart-alert
+    entity_category: config
+    on_value:
+      - lambda: |-
+          if ( x == "Restore Power Off State")
+            relay->set_restore_mode(gpio::GPIO_SWITCH_RESTORE_DEFAULT_OFF);
+          else if ( x == "Invert Power Off State")
+            relay->set_restore_mode(gpio::GPIO_SWITCH_RESTORE_INVERTED_DEFAULT_OFF);
+          else if ( x == "Always On")
+            relay->set_restore_mode(gpio::GPIO_SWITCH_ALWAYS_ON);
+          else if ( x == "Always Off")
+            relay->set_restore_mode(gpio::GPIO_SWITCH_ALWAYS_OFF);
+          else
+            relay->set_restore_mode(gpio::GPIO_SWITCH_$sub_restore_mode);
+
+          // republish state so it gets saved if necessary
+          id(relay).publish_state(id(relay).state);
+
+      - script.execute: script_save_changes
 
 
 # Send IP Address to HA

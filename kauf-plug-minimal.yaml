@@ -49,7 +49,7 @@ esphome:
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project:
     name: "Kauf.PLF10"
-    version: "1.983(m)"
+    version: "1.99(m)"
 
 
 # https://esphome.io/components/esp8266.html
