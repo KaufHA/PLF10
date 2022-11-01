@@ -143,7 +143,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      #ref: v2022.10.18
+      ref: v2022.11.01
     refresh: 0s
 
 
