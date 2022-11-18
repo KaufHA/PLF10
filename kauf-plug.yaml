@@ -6,7 +6,7 @@ substitutions:
   # in your local yaml file by redefining them.
   #
   # packages:
-  #   kauf.plf10: github://KaufHA/PLF10/kauf-plug-lite.yaml
+  #   kauf.plf10: github://KaufHA/PLF10/kauf-plug.yaml
   #
 
   name: kauf-plug              # **** CHANGE DEVICE NAME TO SOMETHING UNIQUE PER DEVICE.  RENAME YAML FILE TO SAME NAME.    ****
@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "1.992"
+  project_ver_num: "2.00"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -144,8 +144,8 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      #ref: v2022.11.01
-    refresh: 0s
+      ref: v2022.11.18
+    refresh: 365250d
 
 
 # https://esphome.io/components/wifi.html
