@@ -39,7 +39,7 @@ script:
             # set scaling factors to expected test load.
             # required ranges helps prevent calibration without proper test load.
             - lambda: |-
-                if ( (id(wattage).state > 20) && (id(wattage).state < 33) ) {
+                if ( (id(wattage).state > 20) && (id(wattage).state < 40) ) {
                   auto call = id(scale_power).make_call();
                   call.set_value(ceil((10.0f*100.0f*26.800f) / id(wattage).state) / 10.0f);
                   call.perform();
