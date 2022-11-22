@@ -39,38 +39,59 @@ script:
             # set scaling factors to expected test load.
             # required ranges helps prevent calibration without proper test load.
             - lambda: |-
+                uint32_t num_ok = 0;
+
                 if ( (id(wattage).state > 20) && (id(wattage).state < 40) ) {
                   auto call = id(scale_power).make_call();
                   call.set_value(ceil((10.0f*100.0f*26.800f) / id(wattage).state) / 10.0f);
                   call.perform();
+                  num_ok++;
                 }
                 if ( (id(current).state > 0.05) && (id(current).state < 1.0) ) {
                   auto call = id(scale_current).make_call();
                   call.set_value(ceil((10.0f*100.0f*0.226f) / id(current).state) / 10.0f);
                   call.perform();
+                  num_ok++;
                 }
                 if ( (id(voltage).state > 90) && (id(voltage).state < 150) ) {
                   auto call = id(scale_voltage).make_call();
                   call.set_value(ceil((10.0f*100.0f*120.0f) / id(voltage).state) / 10.0f);
                   call.perform();
+                  num_ok++;
                 }
 
                 //test passed, clear first_boot variable so we don't run this again
                 id(first_boot) = false;
 
-            # blink blue led to indicate pass test until button is pressed then stay on
-            - while:
-                condition:
-                  binary_sensor.is_off: button_in
-                then:
-                  - light.toggle: blue_led
-                  - delay: 100ms
+                // finish factory test with results argument
+                id(finish_factory_test)->execute(num_ok);
 
-            # set power monitoring mode to lower frequency default
-            - select.set:
-                id: select_monitor_mode
-                option: "10s P / 40s V,I"
-            - lambda: global_preferences->sync();
+  - id: finish_factory_test
+    parameters:
+      num_ok: int
+    then:
+
+      # blink led to indicate finish test until button is pressed then stay on
+      - while:
+          condition:
+            binary_sensor.is_off: button_in
+          then:
+            - lambda: |-
+                if ( num_ok == 3 ) {
+                  auto call = id(blue_led).toggle();
+                  call.perform();
+                } else {
+                  auto call = id(red_led).toggle();
+                  call.perform();
+                }
+            - delay: 100ms
+
+      # set power monitoring mode to lower frequency default
+      - select.set:
+          id: select_monitor_mode
+          option: "10s P / 40s V,I"
+      - lambda: global_preferences->sync();
+
 
 globals:
   - id: first_boot          # used to run test routine at factory
