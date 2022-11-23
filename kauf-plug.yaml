@@ -15,13 +15,14 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.011"
+  project_ver_num: "2.012"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
   sub_restore_mode: RESTORE_DEFAULT_ON  # overwrite to change boot up behavior of relay
 
-  disable_entities: "true"     # set to "false" to have all entities show up in Home Assistant automatically
+  disable_entities:  "true"     # set to "false" to have all entities show up in Home Assistant automatically
+  disable_webserver: "false"    # set to "true" to disable the webserver listening on port 80.
 
   # substitutions for button actions.  on_press and on_release implement a timer scheme with configurable delay.
   # on_hold_30s re-enables the AP and captive portal for the precompiled update binary.
@@ -144,7 +145,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2022.11.18
+      ref: v2022.11.23
     refresh: 365250d
 
 
@@ -188,6 +189,7 @@ ota:
 # https://esphome.io/components/web_server.html
 web_server:
   local: true
+  disable: $disable_webserver
 
 
 # https://esphome.io/components/binary_sensor/index.html
