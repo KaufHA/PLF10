@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.013"
+  project_ver_num: "2.014"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -71,7 +71,7 @@ substitutions:
   sub_change_mode_every: "1"
   sub_update_interval: 10s
   sub_initial_mode: CURRENT
-  select_monitor_mode_initial_option: "10s P / 40s V,I"
+  select_monitor_mode_initial_option: "10s P / 20s V,I"
 
   # GPIO definitions
   sub_pm_sel_pin:   GPIO12
@@ -145,8 +145,8 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2022.11.23.1
-    refresh: 365250d
+      ref: hlw_by_width
+    refresh: never
 
 
 # https://esphome.io/components/wifi.html
@@ -829,13 +829,13 @@ select:
     id: select_monitor_mode
     optimistic: true
     options:
-      - "10s P / 40s V,I"
+      - "10s P / 20s V,I"
       - "10s P,I Only"
       - "10s P,V Only"
       - " 2s P,I Only"
       - " 2s P,V Only"
       - "YAML Configured"
-      - " 2s P / 8s V,I"
+      - " 2s P / 4s V,I"
     initial_option: $select_monitor_mode_initial_option
     restore_value: true
     icon: mdi:wrench-clock
@@ -850,7 +850,7 @@ select:
     on_value:
       - lambda: |-
           if ( !id(global_has_powermode) ) {
-            if ( x == "10s P / 40s V,I") {
+            if ( x == "10s P / 20s V,I") {
               id(hlw_main).set_update_interval(10000);
               id(hlw_main).set_change_mode_every(1); }
             else if ( x == "10s P,I Only" ) {
@@ -861,7 +861,7 @@ select:
               id(hlw_main).set_update_interval(10000);
               id(hlw_main).set_change_mode_every(4294967295);
               id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); }
-            else if ( x == " 2s P / 8s V,I" ) {
+            else if ( x == " 2s P / 4s V,I" ) {
               id(hlw_main).set_update_interval(2000);
               id(hlw_main).set_change_mode_every(1); }
             else if ( x == " 2s P,I Only" ) {
