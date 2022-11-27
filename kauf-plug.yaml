@@ -145,8 +145,8 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: hlw_by_width
-    refresh: never
+      ref: v2022.11.26.1
+    refresh: 365250d
 
 
 # https://esphome.io/components/wifi.html
