@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.014"
+  project_ver_num: "2.015"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -65,13 +65,9 @@ substitutions:
   voltage_cal_val2_in:  "302.1"
   voltage_cal_val2_out: "117.1"
 
-  # set power monitoring mode in yaml, selecting the "yaml_configured" option in the select entity will cause these
-  # values to be used after next reboot.
-  # https://esphome.io/components/sensor/hlw8012.html#configuration-variables
-  sub_change_mode_every: "1"
+  # set default power monitoring update interval in yaml.
+  # this will only be effective as long as the select entity is set to "YAML Configured"
   sub_update_interval: 10s
-  sub_initial_mode: CURRENT
-  select_monitor_mode_initial_option: "10s P / 20s V,I"
 
   # GPIO definitions
   sub_pm_sel_pin:   GPIO12
@@ -110,10 +106,6 @@ globals:
     type: boolean
     restore_value: no
     initial_value: "false"
-  - id: global_has_powermode
-    type: boolean
-    restore_value: no
-    initial_value: "false"
 
 
 # https://esphome.io/components/esphome.html#adjusting-flash-writes
@@ -145,7 +137,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2022.11.26.1
+      ref: v2022.11.29
     refresh: 365250d
 
 
@@ -491,7 +483,7 @@ time:
 sensor:   # Power monitoring sensors output to Home Assistant
 
     # https://esphome.io/components/sensor/hlw8012.html
-  - platform: hlw8012
+  - platform: kauf_hlw8012
     id: hlw_main
     sel_pin:
       number: $sub_pm_sel_pin
@@ -501,9 +493,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     current_resistor: $current_resistor_val
     voltage_divider: $voltage_divider_val
 
-    change_mode_every: $sub_change_mode_every
     update_interval: $sub_update_interval
-    initial_mode: $sub_initial_mode
 
     model: $sub_hlw_model
 
@@ -823,10 +813,13 @@ select:
             - light.turn_off: red_led
       - script.execute: script_set_power_leds
 
-  # change mode of power monitoring
+    # legacy select monitor mode configuration; remove December 1, 2023
+    # removed name, so won't show up in UI.  This is kept so that previous
+    # setting can be migrated to new select entities.
+    # new entity is saved at same address with incremented hash so once the new
+    # one is saved, this one won't be loaded next time.
   - platform: template
-    name: $friendly_name Monitoring Mode
-    id: select_monitor_mode
+    id: select_monitor_mode_old
     optimistic: true
     options:
       - "10s P / 20s V,I"
@@ -836,7 +829,8 @@ select:
       - " 2s P,V Only"
       - "YAML Configured"
       - " 2s P / 4s V,I"
-    initial_option: $select_monitor_mode_initial_option
+      - "Didn't Restore"
+    initial_option: "Didn't Restore"
     restore_value: true
     icon: mdi:wrench-clock
     entity_category: config
@@ -848,32 +842,57 @@ select:
       - script.execute: script_save_changes
       - script.execute: script_setting_reboot
     on_value:
+      - wait_until: # wait until new select entity is setup so it won't get overwritten with default value on setup
+          lambda: return ( id(select_monitor_interval).has_state() );
       - lambda: |-
-          if ( !id(global_has_powermode) ) {
-            if ( x == "10s P / 20s V,I") {
-              id(hlw_main).set_update_interval(10000);
-              id(hlw_main).set_change_mode_every(1); }
-            else if ( x == "10s P,I Only" ) {
-              id(hlw_main).set_update_interval(10000);
-              id(hlw_main).set_change_mode_every(4294967295);
-              id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_CURRENT); }
-            else if ( x == "10s P,V Only" ) {
-              id(hlw_main).set_update_interval(10000);
-              id(hlw_main).set_change_mode_every(4294967295);
-              id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); }
-            else if ( x == " 2s P / 4s V,I" ) {
-              id(hlw_main).set_update_interval(2000);
-              id(hlw_main).set_change_mode_every(1); }
-            else if ( x == " 2s P,I Only" ) {
-              id(hlw_main).set_update_interval(2000);
-              id(hlw_main).set_change_mode_every(4294967295);
-              id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_CURRENT); }
-            else if ( x == " 2s P,V Only" ) {
-              id(hlw_main).set_update_interval(2000);
-              id(hlw_main).set_change_mode_every(4294967295);
-              id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); }
-            id(global_has_powermode) = true;
+          if ( x == "Didn't Restore" ) {
+            id(select_monitor_mode_old).set_restore_value(false);  // don't let old select save over new select
+            ESP_LOGD("Kauf Config Migration", "No legacy monitor mode configuration to migrate.");
+          } else {
+            ESP_LOGD("Kauf Config Migration", "Found legacy monitor mode configuration, migrating to new format.");
+
+            // set monitor mode config select entity.  10s is default so just need to
+            auto call_sel = id(select_monitor_interval).make_call();
+            if      ( str_startswith(x,"10s") ) { call_sel.set_option("10s"); }
+            else if ( str_startswith(x," 2s") ) { call_sel.set_option("2s"); }
+            else                                { call_sel.set_option("YAML Configured"); }
+            call_sel.perform();
+
+            // go ahead and trigger a reboot on every config restoration
+            id(script_save_changes).execute();
+            id(script_setting_reboot).execute();
           }
+
+  # change update interval for power monitoring sensors
+  - platform: template
+    name: $friendly_name Monitoring Update Interval
+    id: select_monitor_interval
+    optimistic: true
+    options:
+      - 60s
+      - 30s
+      - 10s
+      - 5s
+      - 2s
+      - YAML Configured
+    initial_option: 10s
+    restore_value: true
+    icon: mdi:wrench-clock
+    entity_category: config
+    disabled_by_default: $disable_entities
+    forced_hash: 1025003091
+    forced_addr: 0
+    global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
+      - script.execute: script_setting_reboot
+    on_value:
+      - lambda: |-
+          if      ( x == "60s" ) { id(hlw_main).set_update_interval(60000); }
+          else if ( x == "30s" ) { id(hlw_main).set_update_interval(30000); }
+          else if ( x == "10s" ) { id(hlw_main).set_update_interval(10000); }
+          else if ( x == "5s"  ) { id(hlw_main).set_update_interval(5000); }
+          else if ( x == "2s"  ) { id(hlw_main).set_update_interval(2000); }
 
   - platform: template
     name: $friendly_name Boot State
