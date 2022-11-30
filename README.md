@@ -90,7 +90,7 @@ When using kauf-plug.yaml as a package in the ESPHome dashboard, you can configu
 
 ***power monitoring calibration*** - all of the values used to calibrate the power monitoring calibration can be overwritten using substitutions to make the calibration more accurate.
 
-***power monitoring mode*** - in addition to the 5 presets in the Monitoring Mode select entity, any desired settings for the power monitoring mode can be set via substitutions.  See the change_mode_every, initial_mode, and update_interval settings on the [ESPHome HLW8012](https://esphome.io/components/sensor/hlw8012.html#configuration-variables) page.  The select entity needs to be set to "YAML Configured" for the substitutions to take effect.
+***power monitoring update interval*** (`sub_update_interval:`) - Defines the time delay between updates of the power monitoring sensors.  The power monitoring update interval select entity needs to be set to "YAML Configured" for the substitutions to take effect.
 
 ## Factory Reset
 Going to the plug's URL in a web browser and adding /reset will completely wipe all settings from flash memory.  Note that this will wipe the plug's memory of whether the relay was on or off, and therefore the plug may turn off.
