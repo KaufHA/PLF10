@@ -1,7 +1,7 @@
 substitutions:
   project_ver_let: u
-  default_button_config: "Toggle on Release"
-
+  default_button_config: Toggle on Release
+  sub_pm_initial_option: 10s
 
 packages:
   kauf_plug_base: !include kauf-plug.yaml

@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.015"
+  project_ver_num: "2.016"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -68,6 +68,7 @@ substitutions:
   # set default power monitoring update interval in yaml.
   # this will only be effective as long as the select entity is set to "YAML Configured"
   sub_update_interval: 10s
+  sub_pm_initial_option: YAML Configured ($sub_update_interval)
 
   # GPIO definitions
   sub_pm_sel_pin:   GPIO12
@@ -874,8 +875,8 @@ select:
       - 10s
       - 5s
       - 2s
-      - YAML Configured
-    initial_option: 10s
+      - YAML Configured ($sub_update_interval)
+    initial_option: $sub_pm_initial_option
     restore_value: true
     icon: mdi:wrench-clock
     entity_category: config
