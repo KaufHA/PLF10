@@ -61,6 +61,7 @@ If using the precompiled binary or kauf-plug.yaml as a package in the ESPHome da
 - *2s P,I Only* - Power and current are both reported every 2 seconds.  Voltage is never reported.
 - *2s P,V Only* - Power and voltage are both reported every 2 seconds.  Current is never reported.
 - *YAML Configured* - Uses the values defined by substitutions in YAML.  For the precompiled binaries, this is the same as *10s P / 40s V,I*.  See Power Monitoring Mode below for more information on customizing.
+- *2s P / 8s V,I* - Power is measured and reported every 2 seconds.  Current and voltage are each reported every 8 seconds, alternating such that one is reported every 4 seconds.
 
 ***No Hass*** switch entity - Disabled by default.  Turn this switch on if not using Home Assistant with the plug.  Prevents the plug from flashing an error due to no API connection and rebooting every 15 minutes.
 
