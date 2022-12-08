@@ -59,9 +59,9 @@ If using the precompiled binary or kauf-plug.yaml as a package in the ESPHome da
 - *Always Off*: The relay will always remain off when the plug boots.
 - *YAML Configured*: The boot state is set using the `sub_restore_mode:` substitution to any valid value for a [GPIO switch's restore mode](https://esphome.io/components/switch/gpio.html?highlight=restore_mode#configuration-variables).
 
-***Monitoring Update Interval*** select entity - Disabled by default.  Defines the update frequency for the power monitoring sensor entities.  Defaults to *10s*.  Hard coded options are *2s*, *5s*, *10s*, *30s*, and *60s*.  The *YAML Configured* option uses the value defined by the `sub_update_interval:` substitution in YAML.  For the precompiled binaries, this is set to 20s to provide an additional option.
+***Monitoring Update Interval*** select entity - Disabled by default.  Defines the update frequency for the power monitoring sensor entities.  Defaults to *10s*.  Hard coded options are *2s*, *5s*, *10s*, *30s*, and *60s*.  The *YAML Configured* option uses the value defined by the `sub_update_interval:` substitution in YAML.  For the precompiled binaries, this is set to 20s to provide an additional option.  Changing this value will cause the plug to automatically reboot to effect the change.
 
-***Debounce Time*** number entity - Disabled by default.  Defines an amount of time that the button needs to be held before toggling the relay.  Defaults to 100ms and has a minimum value of 50ms.  The PLF10's button needs at least a minimum of 40ms debounce, but the actual necessary value depends on the amount of EMI in the environment where the plug is being used.
+***Debounce Time*** number entity - Disabled by default.  Defines an amount of time that the button needs to be held before toggling the relay.  Defaults to 100ms and has a minimum value of 50ms.  The PLF10's button needs at least a minimum of 40ms debounce, but the actual necessary value depends on the amount of EMI in the environment where the plug is being used.  Changing this value will cause the plug to automatically reboot to effect the change.
 
 ***No Hass*** switch entity - Disabled by default.  Turn this switch on if not using Home Assistant with the plug.  Prevents the plug from flashing an error due to no API connection and rebooting every 15 minutes.
 
