@@ -1,7 +1,9 @@
 substitutions:
   project_ver_let: u
   default_button_config: Toggle on Release
+  sub_update_interval: 20s
   sub_pm_initial_option: 10s
+
 
 packages:
   kauf_plug_base: !include kauf-plug.yaml
@@ -15,9 +17,7 @@ esphome:
   name_add_mac_suffix: true
 
 
-# re-adding wifi component to get forced hash
+# add forced hash in update bin file which isn't needed for dashboard import.
+# Allows saving wifi credentials across update.
 wifi:
-
-  # add forced hash in update bin file which isn't needed for dashboard import.
-  # Allows saving wifi credentials across update.
   forced_hash: 1432266978
