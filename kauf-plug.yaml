@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.016"
+  project_ver_num: "2.02"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -138,7 +138,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2022.11.29
+      ref: v2022.12.07.2
     refresh: 365250d
 
 
@@ -915,18 +915,19 @@ select:
     on_value:
       - lambda: |-
           if ( x == "Restore Power Off State")
-            relay->set_restore_mode(gpio::GPIO_SWITCH_RESTORE_DEFAULT_OFF);
+            relay->set_restore_mode(SWITCH_RESTORE_DEFAULT_OFF);
           else if ( x == "Invert Power Off State")
-            relay->set_restore_mode(gpio::GPIO_SWITCH_RESTORE_INVERTED_DEFAULT_OFF);
+            relay->set_restore_mode(SWITCH_RESTORE_INVERTED_DEFAULT_OFF);
           else if ( x == "Always On")
-            relay->set_restore_mode(gpio::GPIO_SWITCH_ALWAYS_ON);
+            relay->set_restore_mode(SWITCH_ALWAYS_ON);
           else if ( x == "Always Off")
-            relay->set_restore_mode(gpio::GPIO_SWITCH_ALWAYS_OFF);
+            relay->set_restore_mode(SWITCH_ALWAYS_OFF);
           else
-            relay->set_restore_mode(gpio::GPIO_SWITCH_$sub_restore_mode);
+            relay->set_restore_mode(SWITCH_$sub_restore_mode);
 
           // republish state so it gets saved if necessary
-          id(relay).publish_state(id(relay).state);
+          // but make sure relay already set up, don't want to publish here on boot
+          if ( id(relay).is_setup() ) id(relay).publish_state(id(relay).state, true);
 
       - script.execute: script_save_changes
 
