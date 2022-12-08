@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.00"
+  project_ver_num: "2.02"
   project_ver_let: l
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -64,13 +64,11 @@ substitutions:
   voltage_cal_val2_in:  "302.1"
   voltage_cal_val2_out: "117.1"
 
-  # set power monitoring mode in yaml, selecting the "yaml_configured" option in the select entity will cause these
-  # values to be used after next reboot.
+  # set power monitoring mode in yaml using substitutions
   # https://esphome.io/components/sensor/hlw8012.html#configuration-variables
   sub_change_mode_every: "1"
   sub_update_interval: 10s
   sub_initial_mode: CURRENT
-  select_monitor_mode_initial_option: "10s P / 40s V,I"
 
   # GPIO definitions
   sub_pm_sel_pin:   GPIO12
@@ -100,10 +98,6 @@ globals:
     restore_value: no
     initial_value: '0'
   - id: global_has_debounce
-    type: boolean
-    restore_value: no
-    initial_value: "false"
-  - id: global_has_powermode
     type: boolean
     restore_value: no
     initial_value: "false"
@@ -708,55 +702,6 @@ select:
             - light.turn_off: red_led
       - script.execute: script_set_power_leds
 
-  # change mode of power monitoring
-  - platform: template
-    name: $friendly_name Monitoring Mode
-    id: select_monitor_mode
-    optimistic: true
-    options:
-      - "10s P / 40s V,I"
-      - "10s P,I Only"
-      - "10s P,V Only"
-      - " 2s P,I Only"
-      - " 2s P,V Only"
-      - "YAML Configured"
-      - " 2s P / 8s V,I"
-    initial_option: $select_monitor_mode_initial_option
-    restore_value: true
-    icon: mdi:wrench-clock
-    entity_category: config
-    disabled_by_default: $disable_entities
-    set_action:
-      - script.execute: script_save_changes
-      - script.execute: script_setting_reboot
-    on_value:
-      - lambda: |-
-          if ( !id(global_has_powermode) ) {
-            if ( x == "10s P / 40s V,I") {
-              id(hlw_main).set_update_interval(10000);
-              id(hlw_main).set_change_mode_every(1); }
-            else if ( x == "10s P,I Only" ) {
-              id(hlw_main).set_update_interval(10000);
-              id(hlw_main).set_change_mode_every(4294967295);
-              id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_CURRENT); }
-            else if ( x == "10s P,V Only" ) {
-              id(hlw_main).set_update_interval(10000);
-              id(hlw_main).set_change_mode_every(4294967295);
-              id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); }
-            else if ( x == " 2s P / 8s V,I" ) {
-              id(hlw_main).set_update_interval(2000);
-              id(hlw_main).set_change_mode_every(1); }
-            else if ( x == " 2s P,I Only" ) {
-              id(hlw_main).set_update_interval(2000);
-              id(hlw_main).set_change_mode_every(4294967295);
-              id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_CURRENT); }
-            else if ( x == " 2s P,V Only" ) {
-              id(hlw_main).set_update_interval(2000);
-              id(hlw_main).set_change_mode_every(4294967295);
-              id(hlw_main).set_initial_mode(hlw8012::HLW8012_INITIAL_MODE_VOLTAGE); }
-            id(global_has_powermode) = true;
-          }
-
   - platform: template
     name: $friendly_name Boot State
     id: select_boot_state
@@ -784,10 +729,8 @@ select:
           else
             relay->set_restore_mode(gpio::GPIO_SWITCH_$sub_restore_mode);
 
-          // republish state so it gets saved if necessary
-          id(relay).publish_state(id(relay).state);
-
       - script.execute: script_save_changes
+      - script.execute: script_setting_reboot
 
 
 # Send IP Address to HA
