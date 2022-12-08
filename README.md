@@ -3,7 +3,7 @@
 
 The recommended way to import a plug into your ESPHome dashboard is through the dashboard import feature. The plug should show up in the ESPHome dashboard as being available to adopt.  Below is the minimum necessary yaml, which can be used to manually add your device instead.  Change the name and friendly_name substitutions to fit your use case.  Adding a [`use_address:`](https://esphome.io/components/wifi.html?highlight=use_address#configuration-variables) under `wifi:` will allow you to point the ESPHome dashboard to the device on your network for flashing OTA.
 
-The friendly_name substitution is recommended and will not be automatically created by the ESPHome dashboard import.  If you use the ESPHome dashboard adopt feature, we recommend that you add a friendly_name substitution to rename all of the entities in Home Assistant in one line of yaml.
+The friendly_name substitution is recommended and will not be automatically created by the ESPHome dashboard import.  If you use the ESPHome dashboard import feature, we recommend that you add a friendly_name substitution to rename all of the entities in Home Assistant in one line of yaml.
 
 ```
 substitutions:
