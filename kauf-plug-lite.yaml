@@ -719,18 +719,18 @@ select:
     on_value:
       - lambda: |-
           if ( x == "Restore Power Off State")
-            relay->set_restore_mode(gpio::GPIO_SWITCH_RESTORE_DEFAULT_OFF);
+            relay->set_restore_mode(SWITCH_RESTORE_DEFAULT_OFF);
           else if ( x == "Invert Power Off State")
-            relay->set_restore_mode(gpio::GPIO_SWITCH_RESTORE_INVERTED_DEFAULT_OFF);
+            relay->set_restore_mode(SWITCH_RESTORE_INVERTED_DEFAULT_OFF);
           else if ( x == "Always On")
-            relay->set_restore_mode(gpio::GPIO_SWITCH_ALWAYS_ON);
+            relay->set_restore_mode(SWITCH_ALWAYS_ON);
           else if ( x == "Always Off")
-            relay->set_restore_mode(gpio::GPIO_SWITCH_ALWAYS_OFF);
+            relay->set_restore_mode(SWITCH_ALWAYS_OFF);
           else
-            relay->set_restore_mode(gpio::GPIO_SWITCH_$sub_restore_mode);
+            relay->set_restore_mode(SWITCH_$sub_restore_mode);
 
       - script.execute: script_save_changes
-      - script.execute: script_setting_reboot
+      #- script.execute: script_setting_reboot
 
 
 # Send IP Address to HA
