@@ -132,6 +132,9 @@ General troubleshooting ideas applicable to all products are located in the [Com
 {"NAME":"KAUF Plug","GPIO":[576,0,320,0,224,2720,0,0,2624,32,2656,0,0,0],"FLAG":0,"BASE":18, "CMND":"SwitchDebounce 100", "CMND":"ButtonDebounce 100"}
 ```
 
+This page explains how to use the template if you need help: https://templates.blakadder.com/howto.html
+
+
 ## Links
 - [Purchase plugs on Amazon](https://www.amazon.com/dp/B09JQ3LRHB)
 - [KAUF YouTube Channel](https://www.youtube.com/channel/UCjgziIA-lXmcqcMIm8HDnYg)
