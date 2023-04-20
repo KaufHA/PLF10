@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.022"
+  project_ver_num: "2.023"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -138,7 +138,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2023.03.14
+      ref: v2023.04.18
     refresh: never
 
 
@@ -396,6 +396,7 @@ light:
     forced_hash: 3831461887
     forced_addr: 44
     global_addr: global_forced_addr
+    restore_mode: RESTORE_DEFAULT_ON
     effects:
       - flicker:
           name: Flicker
@@ -411,6 +412,7 @@ light:
     forced_hash: 261191305
     forced_addr: 62
     global_addr: global_forced_addr
+    restore_mode: RESTORE_DEFAULT_ON
     effects:
       - flicker:
           name: Flicker
@@ -461,6 +463,7 @@ switch:
     forced_hash: 657159011
     forced_addr: 42
     global_addr: global_forced_addr
+    restore_mode: RESTORE_DEFAULT_ON
 
 
 # https://esphome.io/components/button/index.html

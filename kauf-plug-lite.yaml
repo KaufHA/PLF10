@@ -377,6 +377,7 @@ light:
     output: blue_led_pwm
     entity_category: config
     default_transition_length: 0s
+    restore_mode: RESTORE_DEFAULT_ON
     effects:
       - flicker:
           name: Flicker
@@ -389,6 +390,7 @@ light:
     output: red_led_pwm
     entity_category: config
     default_transition_length: 0s
+    restore_mode: RESTORE_DEFAULT_ON
     effects:
       - flicker:
           name: Flicker
@@ -425,6 +427,7 @@ switch:
     entity_category: config
     disabled_by_default: $disable_entities
     icon: mdi:toggle-switch-off-outline
+    restore_mode: RESTORE_DEFAULT_ON
     on_turn_on:
       - lambda: |-
           id(kauf_api).set_reboot_timeout(0);  // 0 disables auto rebooting and also new status led blinking.  doesn't stop current status led blinking
