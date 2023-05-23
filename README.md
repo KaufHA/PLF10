@@ -16,6 +16,18 @@ packages:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+
+##########################
+## Re: Binary Size Error
+##   ESPHome now adds API encryption by default.  When the plug firmware is compiled, API encrytion
+##   makes the binary file too big to OTA update.  We recommend that you remove API encryption
+##   by commenting out or removing the following lines to allow easy OTA.  Otherwise, you can keep API
+##   encryption by changing the package line above to kauf-plug-minimal.yaml as an intermediate
+##   firmware before immediately switching back to kauf-plug.yaml.
+##########################
+# api:
+#   encryption:
+#     key: ...
 ```
 
 ## Repo Contents
@@ -122,7 +134,23 @@ Holding the plug's button for 30 seconds will clear any programmed Wi-Fi credent
 
 
 ## Troubleshooting
-**Plugs turning themselves on and off** - Our latest batch of smart plugs has a hardware issue making them susceptible to radio interference, which can make the ESP think that the button was pressed when it really wasn't.  To filter out these spurious presses, a debounce of 100ms was added to the button in the latest firmware release.  Please contact us if the plug is still turning itself on and off even after updating to the latest firmware version and we will warranty the plug.
+### Binary Size Error
+
+ESPHome began adding API encryption by default, which makes the plug binary files too big to OTA update.  If you are getting the message `ERROR Error binary size: Error: ESP does not have enough space to store OTA file. Please try flashing a minimal firmware (remove everything except ota)`, then you need to remove API encryption by commenting it out or deleting the following lines:
+
+```
+# api:
+#   encryption:
+#     key: ...
+```
+If you want to keep API encryption, you can flash first with the kauf-plug-minimal.yaml file each time you need to update or upgrade, and then revert back to the kauf-plug.yaml.
+
+
+### Plugs turning themselves on and off
+
+Our latest batch of smart plugs has a hardware issue making them susceptible to radio interference, which can make the ESP think that the button was pressed when it really wasn't.  To filter out these spurious presses, a debounce of 100ms was added to the button in the latest firmware release.  Please contact us if the plug is still turning itself on and off even after updating to the latest firmware version and we will warranty the plug.
+
+### Additional Troubleshooting
 
 General troubleshooting ideas applicable to all products are located in the [Common repo's readme](https://github.com/KaufHA/common/blob/main/README.md#troubleshooting).
 
