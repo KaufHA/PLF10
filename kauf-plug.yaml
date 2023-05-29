@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.026"
+  project_ver_num: "2.03"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -240,28 +240,21 @@ script:
   - id: script_set_power_leds
     then:
       - lambda: |-
-          auto call = id(blue_led).make_call();
-
           // if blue led follows power status
           if ( (id(select_bled).state == "Power Status") || (id(select_bled).state == "Error and Power") ) {
-            call.set_state(id(relay).state);
-          }
+            id(blue_led).publish_state(id(relay).state); }
 
           // if blue led follows inverse of power status
           else if ( (id(select_bled).state == "Invert Power Status") || (id(select_bled).state == "Error and Invert Power") ) {
-            call.set_state(!id(relay).state);
-          }
+            id(blue_led).publish_state(!id(relay).state); }
 
-          // if blue led is set to not change on power status (error only or disabled), performing an empty call does nothing.
-          call.perform();
-
-          // same as blue but for red led
-          call = id(red_led).make_call();
+          // if red led follows power status
           if ( (id(select_rled).state == "Power Status") || (id(select_rled).state == "Error and Power") ) {
-            call.set_state(id(relay).state); }
+            id(red_led).publish_state(!id(relay).state); }
+
+          // if red led follows inverse of power status
           else if ( (id(select_rled).state == "Invert Power Status") || (id(select_rled).state == "Error and Invert Power") ) {
-            call.set_state(!id(relay).state); }
-          call.perform();
+            id(red_led).publish_state(!id(relay).state); }
 
       - script.execute: script_save_changes
 
@@ -274,19 +267,13 @@ script:
           if ( (id(select_bled).state == "Error Status")  ||
                (id(select_bled).state == "Error and Power") ||
                (id(select_bled).state == "Error and Invert Power") ) {
-            auto call = id(blue_led).turn_on();
-            call.set_save(false);
-            call.perform();
-          }
+            id(blue_led).turn_on(); }
 
           // turn on red LED if configured for error status
           if ( (id(select_rled).state == "Error Status")  ||
                (id(select_rled).state == "Error and Power") ||
                (id(select_rled).state == "Error and Invert Power") ) {
-            auto call = id(red_led).turn_on();
-            call.set_save(false);
-            call.perform();
-          }
+            id(red_led).turn_on(); }
 
       - delay: 350ms
 
@@ -295,19 +282,13 @@ script:
           if ( (id(select_bled).state == "Error Status")  ||
                (id(select_bled).state == "Error and Power") ||
                (id(select_bled).state == "Error and Invert Power") ) {
-            auto call = id(blue_led).turn_off();
-            call.set_save(false);
-            call.perform();
-          }
+            id(blue_led).turn_off(); }
 
           // turn off red LED if configured for error status
           if ( (id(select_rled).state == "Error Status")  ||
                (id(select_rled).state == "Error and Power") ||
                (id(select_rled).state == "Error and Invert Power") ) {
-            auto call = id(red_led).turn_off();
-            call.set_save(false);
-            call.perform();
-          }
+            id(red_led).turn_off(); }
 
       - delay: 1150ms
 
@@ -357,7 +338,7 @@ script:
   - id: blink_led
     mode: queued
     then:
-      - light.toggle: blue_led
+      - switch.toggle: blue_led
       - delay: 333ms
       - script.execute: blink_led
 
@@ -387,43 +368,6 @@ output:
     inverted: true
 
 
-# light entities for blue and red LEDs
-# https://esphome.io/components/light/index.html
-# https://esphome.io/components/light/monochromatic.html
-light:
-  - platform: monochromatic
-    name: $friendly_name Blue LED
-    id: blue_led
-    output: blue_led_pwm
-    entity_category: config
-    default_transition_length: 0s
-    forced_hash: 3831461887
-    forced_addr: 44
-    global_addr: global_forced_addr
-    restore_mode: RESTORE_DEFAULT_ON
-    effects:
-      - flicker:
-          name: Flicker
-          alpha: 90%
-          intensity: 10%
-
-  - platform: monochromatic
-    name: $friendly_name Red LED
-    id: red_led
-    output: red_led_pwm
-    entity_category: config
-    default_transition_length: 0s
-    forced_hash: 261191305
-    forced_addr: 62
-    global_addr: global_forced_addr
-    restore_mode: RESTORE_DEFAULT_ON
-    effects:
-      - flicker:
-          name: Flicker
-          alpha: 90%
-          intensity: 10%
-
-
 # https://esphome.io/components/switch/index.html
 switch:
 
@@ -439,11 +383,9 @@ switch:
     global_addr: global_forced_addr
     restore_mode: $sub_restore_mode
     on_turn_on:
-        - script.execute: script_save_changes
         - script.execute: script_set_power_leds
         - script.execute: $sub_on_turn_on
     on_turn_off:
-        - script.execute: script_save_changes
         - script.execute: script_set_power_leds
         - script.execute: $sub_on_turn_off
 
@@ -468,6 +410,38 @@ switch:
     forced_addr: 42
     global_addr: global_forced_addr
     restore_mode: RESTORE_DEFAULT_ON
+
+  - platform: template
+    id: blue_led
+    name: $friendly_name Blue LED
+    optimistic: true
+    restore_state: true
+    disabled_by_default: $disable_entities
+    icon: mdi:led-outline
+    on_turn_on:
+      - lambda: id(blue_led_pwm).set_level(id(blue_led_brightness).state/100);
+    on_turn_off:
+      - lambda: id(blue_led_pwm).set_level(0.0);
+    forced_hash: 1329407616
+    forced_addr: 44
+    global_addr: global_forced_addr
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: template
+    id: red_led
+    name: $friendly_name Red LED
+    optimistic: true
+    restore_state: true
+    disabled_by_default: $disable_entities
+    icon: mdi:led-outline
+    on_turn_on:
+      - lambda: id(red_led_pwm).set_level(id(red_led_brightness).state/100);
+    on_turn_off:
+      - lambda: id(red_led_pwm).set_level(0.0);
+    forced_hash: 261191305
+    forced_addr: 48
+    global_addr: global_forced_addr
+    restore_mode: RESTORE_DEFAULT_OFF
 
 
 # https://esphome.io/components/button/index.html
@@ -591,6 +565,48 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: id(in_use).publish_state(id(wattage).state >= x);
 
   - platform: template
+    name: ${friendly_name} Blue LED Brightness
+    min_value: 1
+    max_value: 100
+    step: 1
+    initial_value: 75
+    id: blue_led_brightness
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "%"
+    mode: slider
+    icon: mdi:brightness-percent
+    forced_hash: 2635887862
+    forced_addr: 46
+    global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
+    on_value:
+      - lambda: id(blue_led_pwm).set_level(x/100);
+
+  - platform: template
+    name: ${friendly_name} Red LED Brightness
+    min_value: 1
+    max_value: 100
+    step: 1
+    initial_value: 75
+    id: red_led_brightness
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "%"
+    mode: slider
+    icon: mdi:brightness-percent
+    forced_hash: 4192312897
+    forced_addr: 50
+    global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
+    on_value:
+      - lambda: id(red_led_pwm).set_level(x/100);
+
+  - platform: template
     name: ${friendly_name} Scale Power
     min_value: 50
     max_value: 200
@@ -688,65 +704,6 @@ number:      # used as a threshold for whether the plugged-in devices is running
 # https://esphome.io/components/select/template.html
 select:
 
-    # legacy select button configuration; remove June 1, 2023
-    # removed name, so won't show up in UI.  This is kept so that previous
-    # setting can be migrated to new select entities.
-    # new entity is saved at same address with incremented hash so once the new
-    # one is saved, this one won't be loaded next time.
-  - platform: template
-    id: select_button_old
-    optimistic: true
-    options:
-      - Toggle if Pressed For 20ms
-      - Disable Button
-      - Toggle if Pressed For 100ms
-      - Toggle if Pressed For 250ms
-      - Toggle if Pressed For 1s
-      - Toggle if Released After 20ms
-      - Toggle if Released After 100ms
-      - Toggle if Released After 250ms
-      - Toggle if Released After 1s
-      - Didn't Restore
-    initial_option: Didn't Restore
-    restore_value: true
-    forced_hash: 3616613942
-    forced_addr: 34
-    global_addr: global_forced_addr
-    on_value:
-      - wait_until:  # wait until new select entity is setup so set_option won't get overwritten with default value on setup
-          lambda: return ( id(select_button).has_state() );
-      - lambda: |-
-          if ( x == "Didn't Restore" ) {
-            id(select_button_old).set_restore_value(false);  // don't let old select save over new select
-            ESP_LOGD("Kauf Config Migration", "No legacy button configuration to migrate.");
-          } else {
-            ESP_LOGD("Kauf Config Migration", "Found legacy button configuration, migrating to new format.");
-
-            // set button config select entity based on press/release/disabled
-            auto call_sel = id(select_button).make_call();
-            if ( i == 1 )      { call_sel.set_option("Don't Toggle");      }
-            else if ( i >= 5 ) { call_sel.set_option("Toggle on Release"); }
-            else               { call_sel.set_option("Toggle on Press");   }
-            call_sel.perform();
-
-            // set number_debounce if configured for longer than 100ms.
-            std::size_t found = x.find("250ms");
-            if (found != std::string::npos) {
-              auto call_num = id(number_debounce).make_call();
-              call_num.set_value(250);
-              call_num.perform(); }
-            found = x.find("1s");
-            if (found != std::string::npos) {
-              auto call_num = id(number_debounce).make_call();
-              call_num.set_value(1000);
-              call_num.perform(); }
-
-            // go ahead and trigger a reboot on every config restoration
-            id(script_save_changes).execute();
-            id(script_setting_reboot).execute();
-
-          }
-
   - platform: template
     name: $friendly_name Button Config
     id: select_button
@@ -790,7 +747,7 @@ select:
           condition:
             - lambda: return ( x == "Error Status" );
           then:
-            - light.turn_off: blue_led
+            - switch.turn_off: blue_led
       - script.execute: script_set_power_leds
 
   - platform: template
@@ -818,7 +775,7 @@ select:
           condition:
             - lambda: return ( x == "Error Status" );
           then:
-            - light.turn_off: red_led
+            - switch.turn_off: red_led
       - script.execute: script_set_power_leds
 
     # legacy select monitor mode configuration; remove December 1, 2023
@@ -971,9 +928,12 @@ interval:
 # 38-39: Red LED select entity
 # 40-41: Debounce number entity
 # 42-43: No HASS switch
-# 44-55: Blue LED light entity
+# 44-45: Blue LED
+# 46-47: Blue LED Brightness
+# 48-49: Red LED
+# 50-51: Red LED Brightness
 # 56-57: Scale Power
 # 58-59: Scale Current
 # 60-61: Scale Voltage
-# 62-73: Red LED light entity
+
 # 74-75: Boot State select entity
