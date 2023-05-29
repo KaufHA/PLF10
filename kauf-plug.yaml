@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.025"
+  project_ver_num: "2.026"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -64,6 +64,10 @@ substitutions:
   voltage_cal_val1_out: "0.0"
   voltage_cal_val2_in:  "302.1"
   voltage_cal_val2_out: "117.1"
+
+  sub_default_scale_power: "100"
+  sub_default_scale_current: "100"
+  sub_default_scale_voltage: "100"
 
   # set default power monitoring update interval in yaml.
   # this will only be effective as long as the select entity is set to "YAML Configured"
@@ -591,7 +595,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     min_value: 50
     max_value: 200
     step: .1
-    initial_value: 100
+    initial_value: $sub_default_scale_power
     id: scale_power
     entity_category: config
     optimistic: true
@@ -612,7 +616,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     min_value: 50
     max_value: 200
     step: .1
-    initial_value: 100
+    initial_value: $sub_default_scale_current
     id: scale_current
     entity_category: config
     optimistic: true
@@ -633,7 +637,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     min_value: 50
     max_value: 200
     step: .1
-    initial_value: 100
+    initial_value: $sub_default_scale_voltage
     id: scale_voltage
     entity_category: config
     optimistic: true
