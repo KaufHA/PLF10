@@ -595,7 +595,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     set_action:
       - script.execute: script_save_changes
     on_value:
-      - lambda: id(blue_led_pwm).set_level(x/100);
+      - lambda: if ( id(blue_led).state ) id(blue_led_pwm).set_level(x/100);
 
   - platform: template
     name: ${friendly_name} Red LED Brightness
@@ -616,7 +616,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     set_action:
       - script.execute: script_save_changes
     on_value:
-      - lambda: id(red_led_pwm).set_level(x/100);
+      - lambda: if ( id(red_led).state ) id(red_led_pwm).set_level(x/100);
 
   - platform: template
     name: ${friendly_name} Scale Power
