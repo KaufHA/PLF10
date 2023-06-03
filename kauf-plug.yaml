@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.03"
+  project_ver_num: "2.04"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -73,6 +73,11 @@ substitutions:
   # this will only be effective as long as the select entity is set to "YAML Configured"
   sub_update_interval: 10s
   sub_pm_initial_option: YAML Configured ($sub_update_interval)
+
+  # for early sensor publishing
+  sub_early_publish_percent:           "25"
+  sub_early_publish_percent_min_power: "0.5"
+  sub_early_publish_absolute:          "16.68" # for PLF10, 1w is approximately 5.56.  16.68 is approximately 3w.
 
   # GPIO definitions
   sub_pm_sel_pin:   GPIO12
@@ -142,7 +147,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2023.05.17
+      ref: v2023.06.03
     refresh: never
 
 
@@ -476,6 +481,10 @@ sensor:   # Power monitoring sensors output to Home Assistant
     voltage_divider: $voltage_divider_val
 
     update_interval: $sub_update_interval
+
+    early_publish_percent:           $sub_early_publish_percent
+    early_publish_percent_min_power: $sub_early_publish_percent_min_power
+    early_publish_absolute:          $sub_early_publish_absolute
 
     model: $sub_hlw_model
 
