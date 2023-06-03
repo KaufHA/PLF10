@@ -74,6 +74,8 @@ substitutions:
   sub_update_interval: 10s
   sub_pm_initial_option: YAML Configured ($sub_update_interval)
 
+  sub_hlw_timeout: 9s
+
   # for early sensor publishing
   sub_early_publish_percent:           "25"
   sub_early_publish_percent_min_power: "0.5"
@@ -482,6 +484,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
 
     update_interval: $sub_update_interval
 
+    timeout:                         $sub_hlw_timeout
     early_publish_percent:           $sub_early_publish_percent
     early_publish_percent_min_power: $sub_early_publish_percent_min_power
     early_publish_absolute:          $sub_early_publish_absolute
