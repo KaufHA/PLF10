@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.04"
+  project_ver_num: "2.041"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -149,7 +149,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2023.06.03
+      ref: v2023.06.21
     refresh: never
 
 
@@ -237,7 +237,7 @@ binary_sensor:
     # https://esphome.io/components/binary_sensor/template.html
   - platform: template
     id: in_use
-    name: ${friendly_name} Device In Use
+    name: $friendly_name Device In Use
 
 
 # https://esphome.io/guides/automations.html#script-component
@@ -492,7 +492,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     model: $sub_hlw_model
 
     power:
-      name: ${friendly_name} Power
+      name: $friendly_name Power
       unit_of_measurement: W
       id: wattage
       filters:
@@ -504,7 +504,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
         - lambda: id(in_use).publish_state(x >= id(threshold).state);
 
     current:
-      name: ${friendly_name} Current
+      name: $friendly_name Current
       unit_of_measurement: A
       id: current
       filters:
@@ -514,7 +514,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
         - lambda: return x * id(scale_current).state/100.0f;
 
     voltage:
-      name: ${friendly_name} Voltage
+      name: $friendly_name Voltage
       unit_of_measurement: V
       id: voltage
       filters:
@@ -526,7 +526,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     # Reports the total Power so-far each day, resets at midnight
     # https://esphome.io/components/sensor/total_daily_energy.html
   - platform: total_daily_energy
-    name: ${friendly_name} Total Daily Energy
+    name: $friendly_name Total Daily Energy
     power_id: wattage
     filters:
         - multiply: 0.001  ## convert Wh to kWh
@@ -556,7 +556,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
 # https://esphome.io/components/number/template.html
 number:      # used as a threshold for whether the plugged-in devices is running.
   - platform: template
-    name: ${friendly_name} Use Threshold
+    name: $friendly_name Use Threshold
     min_value: 1
     max_value: 100
     step: 1
@@ -577,7 +577,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: id(in_use).publish_state(id(wattage).state >= x);
 
   - platform: template
-    name: ${friendly_name} Blue LED Brightness
+    name: $friendly_name Blue LED Brightness
     min_value: 1
     max_value: 100
     step: 1
@@ -598,7 +598,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: if ( id(blue_led).state ) id(blue_led_pwm).set_level(x/100);
 
   - platform: template
-    name: ${friendly_name} Red LED Brightness
+    name: $friendly_name Red LED Brightness
     min_value: 1
     max_value: 100
     step: 1
@@ -619,7 +619,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: if ( id(red_led).state ) id(red_led_pwm).set_level(x/100);
 
   - platform: template
-    name: ${friendly_name} Scale Power
+    name: $friendly_name Scale Power
     min_value: 50
     max_value: 200
     step: .1
@@ -640,7 +640,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: id(wattage).publish_state(id(wattage).get_raw_state());
 
   - platform: template
-    name: ${friendly_name} Scale Current
+    name: $friendly_name Scale Current
     min_value: 50
     max_value: 200
     step: .1
@@ -661,7 +661,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: id(current).publish_state(id(current).get_raw_state());
 
   - platform: template
-    name: ${friendly_name} Scale Voltage
+    name: $friendly_name Scale Voltage
     min_value: 50
     max_value: 200
     step: .1
@@ -682,7 +682,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: id(voltage).publish_state(id(voltage).get_raw_state());
 
   - platform: template
-    name: ${friendly_name} Debounce Time
+    name: $friendly_name Debounce Time
     min_value: $sub_min_debounce
     max_value: 2000
     step: 1
