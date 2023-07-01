@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.041"
+  project_ver_num: "2.05"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -74,7 +74,7 @@ substitutions:
   sub_update_interval: 10s
   sub_pm_initial_option: YAML Configured ($sub_update_interval)
 
-  sub_hlw_timeout: 9s
+  sub_hlw_timeout: 3s
 
   # for early sensor publishing
   sub_early_publish_percent:           "25"
@@ -149,7 +149,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2023.06.21
+      ref: v2023.07.01.1
     refresh: never
 
 
@@ -435,6 +435,22 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
 
   - platform: template
+    id: switch_early_publish
+    name: $friendly_name Early Publish
+    optimistic: true
+    restore_state: true
+    disabled_by_default: $disable_entities
+    on_turn_on:
+      - lambda: id(hlw_main).enable_early_publish();
+    on_turn_off:
+      - lambda: id(hlw_main).disable_early_publish();
+    forced_hash: 1334841795
+    forced_addr: 62
+    global_addr: global_forced_addr
+    restore_mode: RESTORE_DEFAULT_ON
+
+
+  - platform: template
     id: red_led
     name: $friendly_name Red LED
     optimistic: true
@@ -499,7 +515,11 @@ sensor:   # Power monitoring sensors output to Home Assistant
         - calibrate_linear:
             - $power_cal_val1_in -> $power_cal_val1_out
             - $power_cal_val2_in -> $power_cal_val2_out
-        - lambda: return x * id(scale_power).state/100.0f;
+        - lambda: |-
+              // filter out extremely large values that are incorrect
+              float return_val = x * id(scale_power).state/100.0f;
+              if ( return_val > 5000.0f) return {};
+              else return return_val;
       on_value:   # set or clear in_use template binary sensor depending on whether power usage is over threshold
         - lambda: id(in_use).publish_state(x >= id(threshold).state);
 
@@ -947,5 +967,5 @@ interval:
 # 56-57: Scale Power
 # 58-59: Scale Current
 # 60-61: Scale Voltage
-
+# 62-63: Early Publish Switch
 # 74-75: Boot State select entity
