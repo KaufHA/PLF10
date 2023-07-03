@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.051"
+  project_ver_num: "2.052"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -444,7 +444,7 @@ switch:
       - lambda: id(hlw_main).enable_early_publish();
     on_turn_off:
       - lambda: id(hlw_main).disable_early_publish();
-    forced_hash: 1334841795
+    forced_hash: 1334841796
     forced_addr: 62
     global_addr: global_forced_addr
     restore_mode: RESTORE_DEFAULT_OFF
