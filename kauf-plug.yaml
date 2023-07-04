@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.052"
+  project_ver_num: "2.053"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -257,7 +257,7 @@ script:
 
           // if red led follows power status
           if ( (id(select_rled).state == "Power Status") || (id(select_rled).state == "Error and Power") ) {
-            id(red_led).publish_state(!id(relay).state); }
+            id(red_led).publish_state(id(relay).state); }
 
           // if red led follows inverse of power status
           else if ( (id(select_rled).state == "Invert Power Status") || (id(select_rled).state == "Error and Invert Power") ) {
