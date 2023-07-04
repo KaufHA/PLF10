@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.053"
+  project_ver_num: "2.054"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -149,7 +149,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2023.07.01.1
+      ref: v2023.07.03
     refresh: never
 
 
@@ -405,6 +405,7 @@ switch:
     entity_category: config
     disabled_by_default: $disable_entities
     icon: mdi:toggle-switch-off-outline
+    restore_mode: RESTORE_DEFAULT_ON
     on_turn_on:
       - lambda: |-
           id(kauf_api).set_reboot_timeout(0);  // 0 disables auto rebooting and also new status led blinking.  doesn't stop current status led blinking
@@ -416,7 +417,6 @@ switch:
     forced_hash: 657159011
     forced_addr: 42
     global_addr: global_forced_addr
-    restore_mode: RESTORE_DEFAULT_ON
 
   - platform: template
     id: blue_led
@@ -425,6 +425,7 @@ switch:
     restore_state: true
     disabled_by_default: $disable_entities
     icon: mdi:led-outline
+    restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
       - lambda: id(blue_led_pwm).set_level(id(blue_led_brightness).state/100);
     on_turn_off:
@@ -432,23 +433,6 @@ switch:
     forced_hash: 1329407616
     forced_addr: 44
     global_addr: global_forced_addr
-    restore_mode: RESTORE_DEFAULT_OFF
-
-  - platform: template
-    id: switch_early_publish
-    name: $friendly_name Early Publish
-    optimistic: true
-    restore_state: true
-    disabled_by_default: $disable_entities
-    on_turn_on:
-      - lambda: id(hlw_main).enable_early_publish();
-    on_turn_off:
-      - lambda: id(hlw_main).disable_early_publish();
-    forced_hash: 1334841796
-    forced_addr: 62
-    global_addr: global_forced_addr
-    restore_mode: RESTORE_DEFAULT_OFF
-
 
   - platform: template
     id: red_led
@@ -457,6 +441,7 @@ switch:
     restore_state: true
     disabled_by_default: $disable_entities
     icon: mdi:led-outline
+    restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
       - lambda: id(red_led_pwm).set_level(id(red_led_brightness).state/100);
     on_turn_off:
@@ -464,7 +449,21 @@ switch:
     forced_hash: 261191305
     forced_addr: 48
     global_addr: global_forced_addr
+
+  - platform: template
+    id: switch_early_publish
+    name: $friendly_name Early Publish
+    optimistic: true
+    restore_state: true
+    disabled_by_default: $disable_entities
     restore_mode: RESTORE_DEFAULT_OFF
+    on_turn_on:
+      - lambda: id(hlw_main).enable_early_publish();
+    on_turn_off:
+      - lambda: id(hlw_main).disable_early_publish();
+    forced_hash: 1334841796
+    forced_addr: 62
+    global_addr: global_forced_addr
 
 
 # https://esphome.io/components/button/index.html
@@ -609,13 +608,13 @@ number:      # used as a threshold for whether the plugged-in devices is running
     unit_of_measurement: "%"
     mode: slider
     icon: mdi:brightness-percent
-    forced_hash: 2635887862
-    forced_addr: 46
-    global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
     on_value:
       - lambda: if ( id(blue_led).state ) id(blue_led_pwm).set_level(x/100);
+    forced_hash: 2635887862
+    forced_addr: 46
+    global_addr: global_forced_addr
 
   - platform: template
     name: $friendly_name Red LED Brightness
@@ -630,13 +629,13 @@ number:      # used as a threshold for whether the plugged-in devices is running
     unit_of_measurement: "%"
     mode: slider
     icon: mdi:brightness-percent
-    forced_hash: 4192312897
-    forced_addr: 50
-    global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
     on_value:
       - lambda: if ( id(red_led).state ) id(red_led_pwm).set_level(x/100);
+    forced_hash: 4192312897
+    forced_addr: 50
+    global_addr: global_forced_addr
 
   - platform: template
     name: $friendly_name Scale Power
