@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.054"
+  project_ver_num: "2.055"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -149,7 +149,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2023.07.03
+      ref: v2023.07.18
     refresh: never
 
 
@@ -232,6 +232,8 @@ binary_sensor:
           }
       - script.execute: $sub_on_release
       - script.stop: script_30s_timer
+    filters:
+      - delayed_on: !lambda return id(number_debounce).state;
 
     # indicates whether plugged-in device is running based on configurable threshold.
     # https://esphome.io/components/binary_sensor/template.html
@@ -401,7 +403,6 @@ switch:
     id: switch_no_hass
     name: $friendly_name No HASS
     optimistic: true
-    restore_state: true
     entity_category: config
     disabled_by_default: $disable_entities
     icon: mdi:toggle-switch-off-outline
@@ -422,7 +423,6 @@ switch:
     id: blue_led
     name: $friendly_name Blue LED
     optimistic: true
-    restore_state: true
     disabled_by_default: $disable_entities
     icon: mdi:led-outline
     restore_mode: RESTORE_DEFAULT_OFF
@@ -438,7 +438,6 @@ switch:
     id: red_led
     name: $friendly_name Red LED
     optimistic: true
-    restore_state: true
     disabled_by_default: $disable_entities
     icon: mdi:led-outline
     restore_mode: RESTORE_DEFAULT_OFF
@@ -454,7 +453,6 @@ switch:
     id: switch_early_publish
     name: $friendly_name Early Publish
     optimistic: true
-    restore_state: true
     disabled_by_default: $disable_entities
     restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
@@ -716,20 +714,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     forced_hash: 2232959069
     forced_addr: 40
     global_addr: global_forced_addr
-    set_action:   # currently rebooting plug to apply new delayed_on time
-      - script.execute: script_save_changes
-      - script.execute: script_setting_reboot
-    on_value:
-      - lambda: |-
-          // add a delayed_on filter to the button binary_sensor with time argument from number_debounce.
-          if ( !id(global_has_debounce) ) {
-            binary_sensor::DelayedOnFilter *button_delayedonfilter;
-            button_delayedonfilter = new binary_sensor::DelayedOnFilter(id(number_debounce).state);
-            button_delayedonfilter->set_component_source("binary_sensor");
-            App.register_component(button_delayedonfilter);
-            id(button_in).add_filters({button_delayedonfilter});
-            id(global_has_debounce) = true;
-          }
+
 
 # https://esphome.io/components/select/index.html
 # https://esphome.io/components/select/template.html
