@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.055"
+  project_ver_num: "2.056"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -149,7 +149,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2023.07.18
+      ref: v2023.08.08
     refresh: never
 
 
@@ -423,6 +423,7 @@ switch:
     id: blue_led
     name: $friendly_name Blue LED
     optimistic: true
+    entity_category: config
     disabled_by_default: $disable_entities
     icon: mdi:led-outline
     restore_mode: RESTORE_DEFAULT_OFF
@@ -438,6 +439,7 @@ switch:
     id: red_led
     name: $friendly_name Red LED
     optimistic: true
+    entity_category: config
     disabled_by_default: $disable_entities
     icon: mdi:led-outline
     restore_mode: RESTORE_DEFAULT_OFF
@@ -453,6 +455,7 @@ switch:
     id: switch_early_publish
     name: $friendly_name Early Publish
     optimistic: true
+    entity_category: config
     disabled_by_default: $disable_entities
     restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
