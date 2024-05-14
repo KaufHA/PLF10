@@ -143,6 +143,8 @@ esphome:
       - script.execute: script_set_power_leds
       - script.execute: on_wifi_connect
 
+  min_version: 2024.5.0
+
 
 # https://esphome.io/components/external_components.html
 external_components:
