@@ -15,13 +15,13 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.055"
+  project_ver_num: "2.064"
   project_ver_let: l
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
   sub_restore_mode: RESTORE_DEFAULT_ON  # overwrite to change boot up behavior of relay
 
-  disable_entities: "true"     # set to "false" to have all entities show up in Home Assistant automatically
+  disable_entities:  "true"     # set to "false" to have all entities show up in Home Assistant automatically
 
   # substitutions for button actions.  on_press and on_release implement a timer scheme with configurable delay.
   # on_hold_30s re-enables the AP and captive portal for the precompiled update binary.
@@ -140,9 +140,6 @@ wifi:
 
   # default is 20, 17 is recommended.
   output_power: 17
-
-  # using fast_connect as default since it is required for hidden networks.
-  fast_connect: true
 
   # enable wifi ap with ridiculous timeout so it does not normally turn on.
   ap:
@@ -306,7 +303,7 @@ script:
 
       - lambda: |-
           ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up");
-          wifi_wificomponent->set_ap_timeout(2147483647);
+          wifi_wificomponent_id->set_ap_timeout(2147483647);
 
   - id: script_force_ap
     then:
@@ -394,6 +391,7 @@ switch:
     id: blue_led
     name: $friendly_name Blue LED
     optimistic: true
+    entity_category: config
     disabled_by_default: $disable_entities
     icon: mdi:led-outline
     restore_mode: RESTORE_DEFAULT_OFF
@@ -406,6 +404,7 @@ switch:
     id: red_led
     name: $friendly_name Red LED
     optimistic: true
+    entity_category: config
     disabled_by_default: $disable_entities
     icon: mdi:led-outline
     restore_mode: RESTORE_DEFAULT_OFF

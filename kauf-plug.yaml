@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.063"
+  project_ver_num: "2.064"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -149,7 +149,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2024.04.16
+      ref: v2024.05.13
     refresh: never
 
 
@@ -159,9 +159,6 @@ wifi:
   # **** ENTER WI-FI CREDENTIALS HERE, USING SECRETS.YAML RECOMMENDED ****
   ssid: initial_ap            # !secret wifi_ssid
   password: asdfasdfasdfasdf  # !secret wifi_password
-
-  # using fast_connect as default since it is required for hidden networks.
-  fast_connect: true
 
   # enable wifi ap with ridiculous timeout so it does not normally turn on.
   ap:
@@ -329,7 +326,7 @@ script:
 
       - lambda: |-
           ESP_LOGD("KAUF on_boot","------------------->>>>>>>>>>>>>>>>>   wifi connected, cranking ap timeout back up");
-          wifi_wificomponent->set_ap_timeout(2147483647);
+          wifi_wificomponent_id->set_ap_timeout(2147483647);
 
   - id: script_force_ap
     then:
