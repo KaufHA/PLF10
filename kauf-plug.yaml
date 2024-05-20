@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.065"
+  project_ver_num: "2.066"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -151,13 +151,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2024.05.13
-    refresh: never
-  - source:
-      type: git
-      url: https://github.com/KaufHA/common
-      ref: v2024.04.16
-    components: [web_server, web_server_base]
+      ref: v2024.05.20
     refresh: never
 
 
