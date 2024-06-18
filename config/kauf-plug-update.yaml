@@ -6,7 +6,7 @@ substitutions:
 
 
 packages:
-  kauf_plug_base: !include kauf-plug.yaml
+  kauf_plug_base: !include ../kauf-plug.yaml
 
 
 dashboard_import:
