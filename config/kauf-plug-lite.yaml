@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.064"
+  project_ver_num: "2.068"
   project_ver_let: l
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -130,6 +130,8 @@ esphome:
       - script.execute: script_set_power_leds
       - script.execute: on_wifi_connect
 
+  min_version: 2024.6.0
+
 
 # https://esphome.io/components/wifi.html
 wifi:
@@ -161,13 +163,16 @@ api:
 
 # https://esphome.io/components/ota.html
 ota:
+  platform: esphome
   on_error:
     - button.press: restart_button
 
 
+safe_mode:
+
+
 # https://esphome.io/components/web_server.html
 web_server:
-  local: true
 
 
 # https://esphome.io/components/binary_sensor/index.html

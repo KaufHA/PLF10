@@ -21,3 +21,8 @@ esphome:
 # Allows saving wifi credentials across update.
 wifi:
   forced_hash: 1432266978
+
+
+# embed the web server's js file for binary update files
+web_server:
+  local: true

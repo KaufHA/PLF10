@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.067"
+  project_ver_num: "2.068"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -195,8 +195,8 @@ safe_mode:
 
 # https://esphome.io/components/web_server.html
 web_server:
-  local: true
   disable: $disable_webserver
+  js_url: https://kaufha.com/v2/www.js
 
 
 # https://esphome.io/components/binary_sensor/index.html
