@@ -49,9 +49,9 @@ esphome:
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project:
     name: "Kauf.PLF10"
-    version: "2.068(m)"
+    version: "2.073(m)"
 
-  min_version: 2024.6.0
+  min_version: 2024.11.0
 
 
 # https://esphome.io/components/esp8266.html
@@ -97,7 +97,7 @@ binary_sensor:
     # button input toggles relay and thereby blue led
     # https://esphome.io/components/binary_sensor/gpio.html
   - platform: gpio
-    id: button
+    id: button_in
     name: $friendly_name Button
     pin:
       number: GPIO13
