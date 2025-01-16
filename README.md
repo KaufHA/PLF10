@@ -25,13 +25,11 @@ This repo contains files for the PLF10 Power Monitoring Smart Plug.
 
 ***kauf-plug.yaml*** - The yaml file recommended to import a plug into your ESPHome dashboard and keep all custom KAUF functionality.  This is the yaml file incorporated automatically when the dashboard import feature is used.
 
-***kauf-plug-lite.yaml*** - A yaml file without any Kauf custom components but otherwise keeping as much functionality from kauf-plug.yaml as possible.
+***config/kauf-plug-lite.yaml*** - A yaml file without any Kauf custom components but otherwise keeping as much functionality from kauf-plug.yaml as possible.
 
-***kauf-plug-minimal.yaml*** - A yaml file to import a plug into your ESPHome dashboard with only basic power monitoring smart plug functionality using stock ESPHome.
+***config/kauf-plug-minimal.yaml*** - A yaml file to import a plug into your ESPHome dashboard with only basic power monitoring smart plug functionality using stock ESPHome.
 
-***kauf-plug-update.yaml*** - The yaml file to build the update bin file.  Generally not useful to end users.
-
-***kauf-plug-factory.yaml*** - The yaml file to build the factory bin file.  Generally not useful to end users.
+***config/kauf-plug-update.yaml*** - The yaml file to build the update bin file.  Generally not useful to end users.
 
 
 ## Control Entities
