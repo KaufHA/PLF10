@@ -513,6 +513,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     power:
       name: $friendly_name Power
       unit_of_measurement: W
+      state_class: measurement
       id: wattage
       filters:
         - calibrate_linear:
@@ -529,6 +530,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     current:
       name: $friendly_name Current
       unit_of_measurement: A
+      state_class: measurement
       id: current
       filters:
         - calibrate_linear:
@@ -539,6 +541,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     voltage:
       name: $friendly_name Voltage
       unit_of_measurement: V
+      state_class: measurement
       id: voltage
       filters:
         - calibrate_linear:
@@ -554,6 +557,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     filters:
         - multiply: 0.001  ## convert Wh to kWh
     unit_of_measurement: kWh
+    state_class: total_increasing
     forced_hash: 1903527169
     forced_addr: 6
     global_addr: global_forced_addr
@@ -561,6 +565,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     # https://esphome.io/components/sensor/uptime.html
   - platform: uptime
     name: $friendly_name Uptime
+    state_class: total_increasing
     update_interval: 60s
     entity_category: diagnostic
     disabled_by_default: $disable_entities
