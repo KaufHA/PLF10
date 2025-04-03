@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.083"
+  project_ver_num: "2.084"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -553,6 +553,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     # https://esphome.io/components/sensor/total_daily_energy.html
   - platform: total_daily_energy
     name: $friendly_name Total Daily Energy
+    id: tde
     power_id: wattage
     filters:
         - multiply: 0.001  ## convert Wh to kWh
