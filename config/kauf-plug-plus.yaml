@@ -1,0 +1,199 @@
+substitutions:
+
+  project_ver_let: p
+
+  # debounce specifications
+  sub_default_debounce: "100"
+  sub_min_debounce:     "50"
+  sub_debounce: id(number_debounce).state
+
+  # default select entity option.
+  sub_pm_initial_option: 10s
+  sub_update_interval: 20s
+
+  # use threshold based on entity state
+  sub_threshold:  id(threshold).state
+
+  # scripts to control press duration sensor
+  sub_on_press:   script_press_time
+  sub_on_release: script_release_time
+
+
+packages:
+  kauf.plf10: github://KaufHA/PLF10/kauf-plug.yaml
+
+
+globals:
+  - id: global_press_time
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+
+sensor:
+    # https://esphome.io/components/sensor/template.html
+  - platform: template
+    name: $friendly_name Button Press Duration
+    id: sensor_press_duration
+    entity_category: diagnostic
+    disabled_by_default: $disable_entities
+    unit_of_measurement: ms
+    icon: mdi:timer-outline
+
+
+number:
+  - platform: template
+    name: $friendly_name Debounce Time
+    min_value: $sub_min_debounce
+    max_value: 2000
+    step: 1
+    initial_value: $sub_default_debounce
+    id: number_debounce
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "ms"
+    mode: box
+    disabled_by_default: $disable_entities
+    forced_hash: 2232959069
+    forced_addr: 40
+    global_addr: global_forced_addr
+
+  - platform: template
+    name: $friendly_name Use Threshold
+    min_value: 1
+    max_value: 100
+    step: 1
+    initial_value: 3
+    id: threshold
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: Watt(s)
+    mode: box
+    disabled_by_default: $disable_entities
+    forced_hash: 3932521563
+    forced_addr: 4
+    global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
+    on_value:        # set or clear in_use template binary sensor depending on whether power usage is above threshold
+      - lambda: id(in_use).publish_state(id(wattage).state >= x);
+
+
+select:
+  # change update interval for power monitoring sensors
+  - platform: template
+    name: $friendly_name Monitoring Update Interval
+    id: select_monitor_interval
+    optimistic: true
+    options:
+      - 60s
+      - 30s
+      - 10s
+      - 5s
+      - 2s
+      - YAML Configured ($sub_update_interval)
+    initial_option: $sub_pm_initial_option
+    restore_value: true
+    icon: mdi:wrench-clock
+    entity_category: config
+    disabled_by_default: $disable_entities
+    forced_hash: 1025003091
+    forced_addr: 0
+    global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
+      - script.execute: script_setting_reboot
+    on_value:
+      - lambda: |-
+          if      ( x == "60s" ) { id(hlw_main).set_update_interval(60000); }
+          else if ( x == "30s" ) { id(hlw_main).set_update_interval(30000); }
+          else if ( x == "10s" ) { id(hlw_main).set_update_interval(10000); }
+          else if ( x == "5s"  ) { id(hlw_main).set_update_interval(5000); }
+          else if ( x == "2s"  ) { id(hlw_main).set_update_interval(2000); }
+
+  - platform: template
+    name: $friendly_name Boot State
+    id: select_boot_state
+    optimistic: true
+    options:
+      - "Restore Power Off State"
+      - "Invert Power Off State"
+      - "Always On"
+      - "Always Off"
+      - "YAML Configured ($sub_restore_mode)"
+    initial_option: "Restore Power Off State"
+    restore_value: true
+    icon: mdi:restart-alert
+    entity_category: config
+    forced_hash: 2390278151
+    forced_addr: 74
+    global_addr: global_forced_addr
+    on_value:
+      - lambda: |-
+          if ( x == "Restore Power Off State")
+            relay->set_restore_mode(SWITCH_RESTORE_DEFAULT_OFF);
+          else if ( x == "Invert Power Off State")
+            relay->set_restore_mode(SWITCH_RESTORE_INVERTED_DEFAULT_OFF);
+          else if ( x == "Always On")
+            relay->set_restore_mode(SWITCH_ALWAYS_ON);
+          else if ( x == "Always Off")
+            relay->set_restore_mode(SWITCH_ALWAYS_OFF);
+          else
+            relay->set_restore_mode(SWITCH_$sub_restore_mode);
+
+          // republish state so it gets saved if necessary
+          // but make sure relay already set up, don't want to publish here on boot
+          if ( id(relay).is_setup() ) id(relay).publish_state(id(relay).state, true);
+
+      - script.execute: script_save_changes
+
+
+switch:
+    # https://esphome.io/components/switch/template.html
+  - platform: template
+    id: switch_no_hass
+    name: $friendly_name No HASS
+    optimistic: true
+    entity_category: config
+    disabled_by_default: $disable_entities
+    icon: mdi:toggle-switch-off-outline
+    restore_mode: RESTORE_DEFAULT_ON
+    on_turn_on:
+      - lambda: |-
+          id(kauf_api).set_reboot_timeout(0);  // 0 disables auto rebooting and also new status led blinking.  doesn't stop current status led blinking
+          id(kauf_api).status_clear_warning(); // stops current status led blinking, timeout 0 keeps it from restarting
+      - script.execute: script_save_changes
+    on_turn_off:
+      - lambda: id(kauf_api).set_reboot_timeout(900000);
+      - script.execute: script_save_changes
+    forced_hash: 657159011
+    forced_addr: 42
+    global_addr: global_forced_addr
+
+
+script:
+  - id: script_press_time
+    then:
+      - lambda: |-
+          // store time of press and clear duration sensor
+          id(global_press_time) = millis();
+          id(sensor_press_duration).publish_state(0);
+
+  - id: script_release_time
+    then:
+      - lambda: |-
+          // set duration sensor
+          id(sensor_press_duration).publish_state(millis() - id(global_press_time) + $sub_debounce);
+
+
+# Reserved flash memory added in this file:
+# 00-01: Power Monitoring Interval
+
+# 04-05: Use Threshold
+
+# 40-41: Debounce number entity
+# 42-43: No HASS switch
+
+# 74-75: Boot State select entity
