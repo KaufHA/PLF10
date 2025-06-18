@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.092"
+  project_ver_num: "2.093"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -138,7 +138,7 @@ esphome:
       - script.execute: script_set_power_leds
       - script.execute: on_wifi_connect
 
-  min_version: 2025.5.0
+  min_version: 2025.6.0
 
 
 # https://esphome.io/components/external_components.html
@@ -146,7 +146,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2025.05.21
+      ref: v2025.06.18
     refresh: never
 
 
