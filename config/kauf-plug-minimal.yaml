@@ -45,13 +45,14 @@ substitutions:
 esphome:
 
   name: $name
+  friendly_name: $friendly_name
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project:
     name: "Kauf.PLF10"
-    version: "2.073(m)"
+    version: "2.10(m)"
 
-  min_version: 2024.11.0
+  min_version: 2025.8.2
 
 
 # https://esphome.io/components/esp8266.html
@@ -98,7 +99,7 @@ binary_sensor:
     # https://esphome.io/components/binary_sensor/gpio.html
   - platform: gpio
     id: button_in
-    name: $friendly_name Button
+    name: Button
     pin:
       number: GPIO13
       mode:
@@ -168,8 +169,9 @@ sensor:   # Power monitoring sensors output to Home Assistant
     model: $sub_hlw_model
 
     power:
-      name: ${friendly_name} Power
+      name: Power
       unit_of_measurement: W
+      state_class: measurement
       id: wattage
       filters:
         - calibrate_linear:
@@ -177,8 +179,9 @@ sensor:   # Power monitoring sensors output to Home Assistant
             - $power_cal_val2_in -> $power_cal_val2_out
 
     current:
-      name: ${friendly_name} Current
+      name: Current
       unit_of_measurement: A
+      state_class: measurement
       id: current
       filters:
         - calibrate_linear:
@@ -186,8 +189,9 @@ sensor:   # Power monitoring sensors output to Home Assistant
             - $current_cal_val2_in -> $current_cal_val2_out
 
     voltage:
-      name: ${friendly_name} Voltage
+      name: Voltage
       unit_of_measurement: V
+      state_class: measurement
       id: voltage
       filters:
         - calibrate_linear:
@@ -197,7 +201,8 @@ sensor:   # Power monitoring sensors output to Home Assistant
     # Reports the total Power so-far each day, resets at midnight
     # https://esphome.io/components/sensor/total_daily_energy.html
   - platform: total_daily_energy
-    name: ${friendly_name} Total Daily Energy
+    name: Total Daily Energy
+    state_class: total_increasing
     power_id: wattage
     filters:
         - multiply: 0.001  ## convert Wh to kWh

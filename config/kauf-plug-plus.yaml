@@ -33,7 +33,7 @@ globals:
 sensor:
     # https://esphome.io/components/sensor/template.html
   - platform: template
-    name: $friendly_name Button Press Duration
+    name: Button Press Duration
     id: sensor_press_duration
     entity_category: diagnostic
     disabled_by_default: $disable_entities
@@ -43,7 +43,7 @@ sensor:
 
 number:
   - platform: template
-    name: $friendly_name Debounce Time
+    name: Debounce Time
     min_value: $sub_min_debounce
     max_value: 2000
     step: 1
@@ -60,7 +60,7 @@ number:
     global_addr: global_forced_addr
 
   - platform: template
-    name: $friendly_name Use Threshold
+    name: Use Threshold
     min_value: 1
     max_value: 100
     step: 1
@@ -84,7 +84,7 @@ number:
 select:
   # change update interval for power monitoring sensors
   - platform: template
-    name: $friendly_name Monitoring Update Interval
+    name: Monitoring Update Interval
     id: select_monitor_interval
     optimistic: true
     options:
@@ -114,7 +114,7 @@ select:
           else if ( x == "2s"  ) { id(hlw_main).set_update_interval(2000); }
 
   - platform: template
-    name: $friendly_name Boot State
+    name: Boot State
     id: select_boot_state
     optimistic: true
     options:
@@ -154,7 +154,7 @@ switch:
     # https://esphome.io/components/switch/template.html
   - platform: template
     id: switch_no_hass
-    name: $friendly_name No HASS
+    name: No HASS
     optimistic: true
     entity_category: config
     disabled_by_default: $disable_entities

@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.095"
+  project_ver_num: "2.10"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -98,6 +98,7 @@ substitutions:
   # API reboot timeout
   sub_reboot_timeout: 0s
 
+
 # https://esphome.io/components/esp8266.html
 esp8266:
   board: esp01_1m
@@ -126,6 +127,7 @@ preferences:
 # https://esphome.io/components/esphome.html
 esphome:
   name: $name
+  friendly_name: $friendly_name
 
   project:
     name: $project_name
@@ -138,7 +140,7 @@ esphome:
       - script.execute: script_set_power_leds
       - script.execute: on_wifi_connect
 
-  min_version: 2025.8.0
+  min_version: 2025.8.2
 
   platformio_options:
     build_flags:
@@ -150,7 +152,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2025.08.20
+      ref: v2025.08.26
     refresh: never
 
 
@@ -182,6 +184,7 @@ api:
   id: kauf_api
   reboot_timeout: $sub_reboot_timeout
 
+
 # https://esphome.io/components/ota.html
 ota:
   platform: esphome
@@ -205,7 +208,7 @@ binary_sensor:
     # https://esphome.io/components/binary_sensor/gpio.html
   - platform: gpio
     id: button_in
-    name: $friendly_name Button
+    name: Button
     pin:
       number: $sub_button_pin
       mode:
@@ -234,7 +237,7 @@ binary_sensor:
     # https://esphome.io/components/binary_sensor/template.html
   - platform: template
     id: in_use
-    name: $friendly_name Device In Use
+    name: Device In Use
 
 
 # https://esphome.io/guides/automations.html#script-component
@@ -393,11 +396,9 @@ switch:
         - script.execute: script_set_power_leds
         - script.execute: $sub_on_turn_off
 
-
-
   - platform: template
     id: blue_led
-    name: $friendly_name Blue LED
+    name: Blue LED
     optimistic: true
     entity_category: config
     disabled_by_default: $disable_entities
@@ -413,7 +414,7 @@ switch:
 
   - platform: template
     id: red_led
-    name: $friendly_name Red LED
+    name: Red LED
     optimistic: true
     entity_category: config
     disabled_by_default: $disable_entities
@@ -429,7 +430,7 @@ switch:
 
   - platform: template
     id: switch_early_publish
-    name: $friendly_name Early Publish
+    name: Early Publish
     optimistic: true
     entity_category: config
     disabled_by_default: $disable_entities
@@ -448,7 +449,7 @@ switch:
 button:
   - platform: restart
     id: restart_button
-    name: $friendly_name Restart Firmware
+    name: Restart Firmware
     entity_category: diagnostic
     disabled_by_default: $disable_entities
 
@@ -484,7 +485,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     model: $sub_hlw_model
 
     power:
-      name: $friendly_name Power
+      name: Power
       unit_of_measurement: W
       state_class: measurement
       id: wattage
@@ -501,7 +502,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
         - lambda: id(in_use).publish_state(x >= $sub_threshold);
 
     current:
-      name: $friendly_name Current
+      name: Current
       unit_of_measurement: A
       state_class: measurement
       id: current
@@ -512,7 +513,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
         - lambda: return x * id(scale_current).state/100.0f;
 
     voltage:
-      name: $friendly_name Voltage
+      name: Voltage
       unit_of_measurement: V
       state_class: measurement
       id: voltage
@@ -525,7 +526,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
     # Reports the total Power so-far each day, resets at midnight
     # https://esphome.io/components/sensor/total_daily_energy.html
   - platform: total_daily_energy
-    name: $friendly_name Total Daily Energy
+    name: Total Daily Energy
     id: tde
     power_id: wattage
     filters:
@@ -538,7 +539,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
 
     # https://esphome.io/components/sensor/uptime.html
   - platform: uptime
-    name: $friendly_name Uptime
+    name: Uptime
     state_class: total_increasing
     update_interval: 60s
     entity_category: diagnostic
@@ -549,7 +550,7 @@ sensor:   # Power monitoring sensors output to Home Assistant
 # https://esphome.io/components/number/template.html
 number:      # used as a threshold for whether the plugged-in devices is running.
   - platform: template
-    name: $friendly_name Blue LED Brightness
+    name: Blue LED Brightness
     min_value: 1
     max_value: 100
     step: 1
@@ -570,7 +571,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     global_addr: global_forced_addr
 
   - platform: template
-    name: $friendly_name Red LED Brightness
+    name: Red LED Brightness
     min_value: 1
     max_value: 100
     step: 1
@@ -591,7 +592,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
     global_addr: global_forced_addr
 
   - platform: template
-    name: $friendly_name Scale Power
+    name: Scale Power
     min_value: 50
     max_value: 200
     step: .1
@@ -612,7 +613,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: id(wattage).publish_state(id(wattage).get_raw_state());
 
   - platform: template
-    name: $friendly_name Scale Current
+    name: Scale Current
     min_value: 50
     max_value: 200
     step: .1
@@ -633,7 +634,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: id(current).publish_state(id(current).get_raw_state());
 
   - platform: template
-    name: $friendly_name Scale Voltage
+    name: Scale Voltage
     min_value: 50
     max_value: 200
     step: .1
@@ -659,7 +660,7 @@ number:      # used as a threshold for whether the plugged-in devices is running
 select:
 
   - platform: template
-    name: $friendly_name Button Config
+    name: Button Config
     id: select_button
     optimistic: true
     options:
@@ -677,7 +678,7 @@ select:
       - script.execute: script_save_changes
 
   - platform: template
-    name: $friendly_name Blue LED Config
+    name: Blue LED Config
     id: select_bled
     optimistic: true
     entity_category: config
@@ -705,7 +706,7 @@ select:
       - script.execute: script_set_power_leds
 
   - platform: template
-    name: $friendly_name Red LED Config
+    name: Red LED Config
     id: select_rled
     optimistic: true
     entity_category: config
@@ -738,7 +739,7 @@ select:
 text_sensor:
   - platform: wifi_info
     ip_address:
-      name: $friendly_name IP Address
+      name: IP Address
       disabled_by_default: $disable_entities
 
 
