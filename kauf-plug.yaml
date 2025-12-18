@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.105"
+  project_ver_num: "2.106"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -386,7 +386,7 @@ switch:
     # https://esphome.io/components/switch/gpio.html
   - platform: gpio
     id: relay
-    name: $friendly_name
+    name: ""
     pin: $sub_relay_pin
     entity_category: ''
     forced_hash: 41191675
