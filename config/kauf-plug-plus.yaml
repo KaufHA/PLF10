@@ -57,7 +57,8 @@ number:
     disabled_by_default: $disable_entities
     forced_hash: 2232959069
     forced_addr: 40
-    global_addr: global_forced_addr
+    set_action:
+      - script.execute: script_save_changes
 
   - platform: template
     name: Use Threshold
@@ -74,7 +75,6 @@ number:
     disabled_by_default: $disable_entities
     forced_hash: 3932521563
     forced_addr: 4
-    global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
     on_value:        # set or clear in_use template binary sensor depending on whether power usage is above threshold
@@ -101,7 +101,6 @@ select:
     disabled_by_default: $disable_entities
     forced_hash: 1025003091
     forced_addr: 0
-    global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
       - script.execute: script_setting_reboot
@@ -129,7 +128,6 @@ select:
     entity_category: config
     forced_hash: 2390278151
     forced_addr: 74
-    global_addr: global_forced_addr
     on_value:
       - lambda: |-
           if ( x == "Restore Power Off State")
@@ -145,7 +143,7 @@ select:
 
           // republish state so it gets saved if necessary
           // but make sure relay already set up, don't want to publish here on boot
-          if ( id(relay).is_setup() ) id(relay).publish_state(id(relay).state, true);
+          if ( id(relay).is_ready() ) id(relay).publish_state(id(relay).state, true);
 
       - script.execute: script_save_changes
 
@@ -170,7 +168,6 @@ switch:
       - script.execute: script_save_changes
     forced_hash: 657159011
     forced_addr: 42
-    global_addr: global_forced_addr
 
 
 script:

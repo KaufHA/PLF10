@@ -50,9 +50,9 @@ esphome:
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project:
     name: "Kauf.PLF10"
-    version: "2.10(m)"
+    version: "2.107(m)"
 
-  min_version: 2025.8.2
+  min_version: 2026.1.0
 
 
 # https://esphome.io/components/esp8266.html
@@ -74,13 +74,16 @@ wifi:
 
   ap:
 
+  min_auth_mode: WPA2
+
 
 captive_portal:   # https://esphome.io/components/captive_portal.html
 web_server:       # https://esphome.io/components/web_server.html
 logger:           # https://esphome.io/components/logger.html
 api:              # https://esphome.io/components/api.html
 ota:              # https://esphome.io/components/ota.html
-  platform: esphome
+  - platform: esphome
+  - platform: web_server
 safe_mode:
 
 
@@ -130,7 +133,7 @@ switch:
     # relay output
   - platform: gpio
     id: relay
-    name: $friendly_name
+    name: ""
     pin: GPIO4
     restore_mode: RESTORE_DEFAULT_ON
 

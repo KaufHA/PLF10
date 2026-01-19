@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.10"
+  project_ver_num: "2.107"
   project_ver_let: l
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -124,11 +124,7 @@ esphome:
       - script.execute: script_set_power_leds
       - script.execute: on_wifi_connect
 
-  min_version: 2025.8.2
-
-  platformio_options:
-    build_flags:
-      - -w
+  min_version: 2026.1.0
 
 
 # https://esphome.io/components/wifi.html
@@ -144,6 +140,8 @@ wifi:
   # enable wifi ap with ridiculous timeout so it does not normally turn on.
   ap:
     ap_timeout: 2147483647ms  # maximum 32 bit value.  About 3.5 weeks in milliseconds.
+
+  min_auth_mode: WPA2
 
 
 # https://esphome.io/components/captive_portal.html
@@ -162,9 +160,12 @@ api:
 
 # https://esphome.io/components/ota.html
 ota:
-  platform: esphome
-  on_error:
-    - button.press: restart_button
+  - platform: web_server
+    on_error:
+      - button.press: restart_button
+  - platform: esphome
+    on_error:
+      - button.press: restart_button
 
 
 safe_mode:
@@ -191,14 +192,14 @@ binary_sensor:
     on_press:
       - lambda: |-
           // toggle if configured for toggle on press
-          if (id(select_button).state == "Toggle on Press") {
+          if (id(select_button).current_option() == "Toggle on Press") {
             id(relay).toggle(); }
       - script.execute: $sub_on_press
       - script.execute: script_30s_timer
     on_release:
       - lambda: |-
           // toggle if configured on release and toggle check script is not running.
-          if (  (id(select_button).state == "Toggle on Release") && !id($sub_toggle_check).is_running() ) {
+          if (  (id(select_button).current_option() == "Toggle on Release") && !id($sub_toggle_check).is_running() ) {
             id(relay).toggle();
           }
       - script.execute: $sub_on_release
@@ -221,19 +222,19 @@ script:
     then:
       - lambda: |-
           // if blue led follows power status
-          if ( (id(select_bled).state == "Power Status") || (id(select_bled).state == "Error and Power") ) {
+          if ( (id(select_bled).current_option() == "Power Status") || (id(select_bled).current_option() == "Error and Power") ) {
             id(blue_led).publish_state(id(relay).state); }
 
           // if blue led follows inverse of power status
-          else if ( (id(select_bled).state == "Invert Power Status") || (id(select_bled).state == "Error and Invert Power") ) {
+          else if ( (id(select_bled).current_option() == "Invert Power Status") || (id(select_bled).current_option() == "Error and Invert Power") ) {
             id(blue_led).publish_state(!id(relay).state); }
 
           // if red led follows power status
-          if ( (id(select_rled).state == "Power Status") || (id(select_rled).state == "Error and Power") ) {
+          if ( (id(select_rled).current_option() == "Power Status") || (id(select_rled).current_option() == "Error and Power") ) {
             id(red_led).publish_state(id(relay).state); }
 
           // if red led follows inverse of power status
-          else if ( (id(select_rled).state == "Invert Power Status") || (id(select_rled).state == "Error and Invert Power") ) {
+          else if ( (id(select_rled).current_option() == "Invert Power Status") || (id(select_rled).current_option() == "Error and Invert Power") ) {
             id(red_led).publish_state(!id(relay).state); }
 
       - script.execute: script_save_changes
@@ -244,30 +245,30 @@ script:
 
       - lambda: |-
           // turn on blue LED if configured for error status
-          if ( (id(select_bled).state == "Error Status")  ||
-               (id(select_bled).state == "Error and Power") ||
-               (id(select_bled).state == "Error and Invert Power") ) {
+          if ( (id(select_bled).current_option() == "Error Status")  ||
+               (id(select_bled).current_option() == "Error and Power") ||
+               (id(select_bled).current_option() == "Error and Invert Power") ) {
             id(blue_led).turn_on(); }
 
           // turn on red LED if configured for error status
-          if ( (id(select_rled).state == "Error Status")  ||
-               (id(select_rled).state == "Error and Power") ||
-               (id(select_rled).state == "Error and Invert Power") ) {
+          if ( (id(select_rled).current_option() == "Error Status")  ||
+               (id(select_rled).current_option() == "Error and Power") ||
+               (id(select_rled).current_option() == "Error and Invert Power") ) {
             id(red_led).turn_on(); }
 
       - delay: 350ms
 
       - lambda: |-
           // turn off blue LED if configured for error status
-          if ( (id(select_bled).state == "Error Status")  ||
-               (id(select_bled).state == "Error and Power") ||
-               (id(select_bled).state == "Error and Invert Power") ) {
+          if ( (id(select_bled).current_option() == "Error Status")  ||
+               (id(select_bled).current_option() == "Error and Power") ||
+               (id(select_bled).current_option() == "Error and Invert Power") ) {
             id(blue_led).turn_off(); }
 
           // turn off red LED if configured for error status
-          if ( (id(select_rled).state == "Error Status")  ||
-               (id(select_rled).state == "Error and Power") ||
-               (id(select_rled).state == "Error and Invert Power") ) {
+          if ( (id(select_rled).current_option() == "Error Status")  ||
+               (id(select_rled).current_option() == "Error and Power") ||
+               (id(select_rled).current_option() == "Error and Invert Power") ) {
             id(red_led).turn_off(); }
 
       - delay: 1150ms
@@ -355,7 +356,7 @@ switch:
     # https://esphome.io/components/switch/gpio.html
   - platform: gpio
     id: relay
-    name: $friendly_name
+    name: ""
     pin: $sub_relay_pin
     entity_category: ''
     restore_mode: $sub_restore_mode

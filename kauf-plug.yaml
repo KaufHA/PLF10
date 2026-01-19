@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.106"
+  project_ver_num: "2.107"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -105,15 +105,6 @@ esp8266:
   restore_from_flash: true
   early_pin_init: false
   start_free: 76
-  global_addr: global_forced_addr
-
-
-# https://esphome.io/guides/automations.html#global-variables
-globals:
-  - id: global_forced_addr
-    type: int
-    restore_value: no
-    initial_value: '12345'
 
 
 # https://esphome.io/components/esphome.html#adjusting-flash-writes
@@ -140,7 +131,7 @@ esphome:
       - script.execute: script_set_power_leds
       - script.execute: on_wifi_connect
 
-  min_version: 2025.12.0
+  min_version: 2026.1.0
 
 
 # https://esphome.io/components/external_components.html
@@ -148,7 +139,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2025.12.16
+      ref: v2026.01.16
     refresh: never
 
 
@@ -164,9 +155,9 @@ wifi:
     ap_timeout: 2147483647ms  # maximum 32 bit value.  About 3.5 weeks in milliseconds.
 
   forced_addr: 8
-  global_addr: global_forced_addr
 
   min_auth_mode: WPA2
+
 
 # https://esphome.io/components/captive_portal.html
 captive_portal:
@@ -218,14 +209,14 @@ binary_sensor:
     on_press:
       - lambda: |-
           // toggle if configured for toggle on press
-          if (strcmp(id(select_button).current_option(), "Toggle on Press") == 0) {
+          if (id(select_button).current_option() == "Toggle on Press") {
             id(relay).toggle(); }
       - script.execute: $sub_on_press
       - script.execute: script_30s_timer
     on_release:
       - lambda: |-
           // toggle if configured on release and toggle check script is not running.
-          if ( (strcmp(id(select_button).current_option(), "Toggle on Release") == 0) && !id($sub_toggle_check).is_running() ) {
+          if (  (id(select_button).current_option() == "Toggle on Release") && !id($sub_toggle_check).is_running() ) {
             id(relay).toggle();
           }
       - script.execute: $sub_on_release
@@ -248,23 +239,19 @@ script:
     then:
       - lambda: |-
           // if blue led follows power status
-          if ( (strcmp(id(select_bled).current_option(), "Power Status") == 0) ||
-               (strcmp(id(select_bled).current_option(), "Error and Power") == 0) ) {
+          if ( (id(select_bled).current_option() == "Power Status") || (id(select_bled).current_option() == "Error and Power") ) {
             id(blue_led).publish_state(id(relay).state); }
 
           // if blue led follows inverse of power status
-          else if ( (strcmp(id(select_bled).current_option(), "Invert Power Status") == 0) ||
-                    (strcmp(id(select_bled).current_option(), "Error and Invert Power") == 0) ) {
+          else if ( (id(select_bled).current_option() == "Invert Power Status") || (id(select_bled).current_option() == "Error and Invert Power") ) {
             id(blue_led).publish_state(!id(relay).state); }
 
           // if red led follows power status
-          if ( (strcmp(id(select_rled).current_option(), "Power Status") == 0) ||
-               (strcmp(id(select_rled).current_option(), "Error and Power") == 0) ) {
+          if ( (id(select_rled).current_option() == "Power Status") || (id(select_rled).current_option() == "Error and Power") ) {
             id(red_led).publish_state(id(relay).state); }
 
           // if red led follows inverse of power status
-          else if ( (strcmp(id(select_rled).current_option(), "Invert Power Status") == 0) ||
-                    (strcmp(id(select_rled).current_option(), "Error and Invert Power") == 0) ) {
+          else if ( (id(select_rled).current_option() == "Invert Power Status") || (id(select_rled).current_option() == "Error and Invert Power") ) {
             id(red_led).publish_state(!id(relay).state); }
 
       - script.execute: script_save_changes
@@ -275,30 +262,30 @@ script:
 
       - lambda: |-
           // turn on blue LED if configured for error status
-          if ( (strcmp(id(select_bled).current_option(), "Error Status") == 0) ||
-               (strcmp(id(select_bled).current_option(), "Error and Power") == 0) ||
-               (strcmp(id(select_bled).current_option(), "Error and Invert Power") == 0) ) {
+          if ( (id(select_bled).current_option() == "Error Status")  ||
+               (id(select_bled).current_option() == "Error and Power") ||
+               (id(select_bled).current_option() == "Error and Invert Power") ) {
             id(blue_led).turn_on(); }
 
           // turn on red LED if configured for error status
-          if ( (strcmp(id(select_rled).current_option(), "Error Status") == 0) ||
-               (strcmp(id(select_rled).current_option(), "Error and Power") == 0) ||
-               (strcmp(id(select_rled).current_option(), "Error and Invert Power") == 0) ) {
+          if ( (id(select_rled).current_option() == "Error Status")  ||
+               (id(select_rled).current_option() == "Error and Power") ||
+               (id(select_rled).current_option() == "Error and Invert Power") ) {
             id(red_led).turn_on(); }
 
       - delay: 350ms
 
       - lambda: |-
           // turn off blue LED if configured for error status
-          if ( (strcmp(id(select_bled).current_option(), "Error Status") == 0) ||
-               (strcmp(id(select_bled).current_option(), "Error and Power") == 0) ||
-               (strcmp(id(select_bled).current_option(), "Error and Invert Power") == 0) ) {
+          if ( (id(select_bled).current_option() == "Error Status")  ||
+               (id(select_bled).current_option() == "Error and Power") ||
+               (id(select_bled).current_option() == "Error and Invert Power") ) {
             id(blue_led).turn_off(); }
 
           // turn off red LED if configured for error status
-          if ( (strcmp(id(select_rled).current_option(), "Error Status") == 0) ||
-               (strcmp(id(select_rled).current_option(), "Error and Power") == 0) ||
-               (strcmp(id(select_rled).current_option(), "Error and Invert Power") == 0) ) {
+          if ( (id(select_rled).current_option() == "Error Status")  ||
+               (id(select_rled).current_option() == "Error and Power") ||
+               (id(select_rled).current_option() == "Error and Invert Power") ) {
             id(red_led).turn_off(); }
 
       - delay: 1150ms
@@ -391,7 +378,6 @@ switch:
     entity_category: ''
     forced_hash: 41191675
     forced_addr: 2
-    global_addr: global_forced_addr
     restore_mode: $sub_restore_mode
     on_turn_on:
         - script.execute: script_set_power_leds
@@ -414,7 +400,6 @@ switch:
       - lambda: id(blue_led_pwm).set_level(0.0);
     forced_hash: 1329407616
     forced_addr: 44
-    global_addr: global_forced_addr
 
   - platform: template
     id: red_led
@@ -430,7 +415,6 @@ switch:
       - lambda: id(red_led_pwm).set_level(0.0);
     forced_hash: 261191305
     forced_addr: 48
-    global_addr: global_forced_addr
 
   - platform: template
     id: switch_early_publish
@@ -445,7 +429,6 @@ switch:
       - lambda: id(hlw_main).disable_early_publish();
     forced_hash: 1334841796
     forced_addr: 62
-    global_addr: global_forced_addr
 
 
 # https://esphome.io/components/button/index.html
@@ -539,7 +522,6 @@ sensor:   # Power monitoring sensors output to Home Assistant
     state_class: total_increasing
     forced_hash: 1903527169
     forced_addr: 6
-    global_addr: global_forced_addr
 
     # https://esphome.io/components/sensor/uptime.html
   - platform: uptime
@@ -572,7 +554,6 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: if ( id(blue_led).state ) id(blue_led_pwm).set_level(x/100);
     forced_hash: 2635887862
     forced_addr: 46
-    global_addr: global_forced_addr
 
   - platform: template
     name: Red LED Brightness
@@ -593,7 +574,6 @@ number:      # used as a threshold for whether the plugged-in devices is running
       - lambda: if ( id(red_led).state ) id(red_led_pwm).set_level(x/100);
     forced_hash: 4192312897
     forced_addr: 50
-    global_addr: global_forced_addr
 
   - platform: template
     name: Scale Power
@@ -610,7 +590,6 @@ number:      # used as a threshold for whether the plugged-in devices is running
     disabled_by_default: $disable_entities
     forced_hash: 3565176138
     forced_addr: 56
-    global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
     on_value:   # republish value. Sensor automation applies new scaling factor.
@@ -631,7 +610,6 @@ number:      # used as a threshold for whether the plugged-in devices is running
     disabled_by_default: $disable_entities
     forced_hash: 2293595686
     forced_addr: 58
-    global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
     on_value:   # republish value. Sensor automation applies new scaling factor.
@@ -652,7 +630,6 @@ number:      # used as a threshold for whether the plugged-in devices is running
     disabled_by_default: $disable_entities
     forced_hash: 254525215
     forced_addr: 60
-    global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
     on_value:   # republish value. Sensor automation applies new scaling factor.
@@ -677,7 +654,6 @@ select:
     entity_category: config
     forced_hash: 3616613943
     forced_addr: 34
-    global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
 
@@ -698,7 +674,6 @@ select:
     icon: mdi:led-on
     forced_hash: 3104663617
     forced_addr: 36
-    global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
     on_value:
@@ -726,7 +701,6 @@ select:
     icon: mdi:led-on
     forced_hash: 261191305
     forced_addr: 38
-    global_addr: global_forced_addr
     set_action:
       - script.execute: script_save_changes
     on_value:
