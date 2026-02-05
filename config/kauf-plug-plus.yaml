@@ -20,7 +20,7 @@ substitutions:
 
 
 packages:
-  kauf.plf10: github://KaufHA/PLF10/kauf-plug.yaml
+  kauf.plf10: !include ../kauf-plug.yaml  # github://KaufHA/PLF10/kauf-plug.yaml
 
 
 globals:
