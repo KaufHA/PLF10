@@ -15,14 +15,13 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.112"
+  project_ver_num: "2.113"
   project_ver_let: y
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
   sub_restore_mode: RESTORE_DEFAULT_ON  # overwrite to change boot up behavior of relay
 
   disable_entities:  "true"     # set to "false" to have all entities show up in Home Assistant automatically
-  disable_webserver: "false"    # set to "true" to disable the webserver listening on port 80.
 
   # substitutions for button actions.  on_press and on_release implement a timer scheme with configurable delay.
   # on_hold_30s re-enables the AP and captive portal for the precompiled update binary.
@@ -44,8 +43,6 @@ substitutions:
   # used to not toggle when WiFi AP is re-enabled on update bin file.
   sub_toggle_check: script_force_ap
 
-  # made this a substitution so that the update bin file and yaml compiled versions can have different defaults
-  default_button_config: "Toggle on Press"
 
   # substitutions for power monitoring calibration.  Allows end users to change calibration in their yaml and still
   # incorporate this file as a package to get all the updates we release.
@@ -95,8 +92,18 @@ substitutions:
   # threshold for in_use sensor
   sub_threshold: "3"
 
-  # API reboot timeout
-  sub_reboot_timeout: 0s
+  # KAUF deprecated substitutions  
+  sub_reboot_timeout:    "__KAUF_DEPRECATED_SENTINEL__"  # deprecated; see https://github.com/KaufHA/common/DEPRECATED_SUBSTITUTIONS.md#sub_reboot_timeout
+  default_button_config: "__KAUF_DEPRECATED_SENTINEL__"  # deprecated; see https://github.com/KaufHA/common/DEPRECATED_SUBSTITUTIONS.md#default_button_config
+  disable_webserver:     "__KAUF_DEPRECATED_SENTINEL__"  # deprecated; see https://github.com/KaufHA/common/DEPRECATED_SUBSTITUTIONS.md#disable_webserver
+
+
+kauf_deprecations:
+  sub_reboot_timeout:    $sub_reboot_timeout
+  default_button_config: $default_button_config
+  disable_webserver:     $disable_webserver
+
+
 
 
 # https://esphome.io/components/esp8266.html
@@ -139,7 +146,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/KaufHA/common
-      ref: v2026.2.2
+      ref: v2026.2.3
     refresh: never
 
 
@@ -170,7 +177,7 @@ logger:
 # https://esphome.io/components/api.html
 api:
   id: kauf_api
-  reboot_timeout: $sub_reboot_timeout
+  reboot_timeout: 0s
 
 
 # https://esphome.io/components/ota.html
@@ -188,7 +195,6 @@ safe_mode:
 
 # https://esphome.io/components/web_server.html
 web_server:
-  disable: $disable_webserver
   js_url: https://kaufha.com/v2/www.js
   product: plf10
 
@@ -649,7 +655,7 @@ select:
       - Toggle on Press
       - Toggle on Release
       - Don't Toggle
-    initial_option: $default_button_config
+    initial_option: Toggle on Press
     restore_value: true
     icon: mdi:circle-double
     entity_category: config

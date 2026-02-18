@@ -1,6 +1,5 @@
 substitutions:
   project_ver_let: u
-  default_button_config: Toggle on Release
   sub_update_interval: 20s
   sub_pm_initial_option: 10s
 
@@ -26,3 +25,8 @@ wifi:
 # embed the web server's js file for binary update files
 web_server:
   local: true
+
+
+select:
+  - id: !extend select_button
+    initial_option: Toggle on Release
