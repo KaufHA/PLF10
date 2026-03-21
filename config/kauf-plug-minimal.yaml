@@ -50,7 +50,7 @@ esphome:
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project:
     name: "Kauf.PLF10"
-    version: "2.107(m)"
+    version: "2.117(m)"
 
   min_version: 2026.1.0
 
