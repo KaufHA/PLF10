@@ -50,7 +50,7 @@ esphome:
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project:
     name: "Kauf.PLF10"
-    version: "2.107(m)"
+    version: "2.117(m)"
 
   min_version: 2026.1.0
 
@@ -83,7 +83,9 @@ logger:           # https://esphome.io/components/logger.html
 api:              # https://esphome.io/components/api.html
 ota:              # https://esphome.io/components/ota.html
   - platform: esphome
+    id: kauf_esphome_ota
   - platform: web_server
+    id: kauf_web_server_ota
 safe_mode:
 
 

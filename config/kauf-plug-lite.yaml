@@ -15,7 +15,7 @@ substitutions:
 
   # https://esphome.io/components/esphome.html#esphome-creators-project
   project_name: Kauf.PLF10
-  project_ver_num: "2.107"
+  project_ver_num: "2.117"
   project_ver_let: l
 
   # https://esphome.io/components/switch/gpio.html?highlight=restore_mode
@@ -161,9 +161,11 @@ api:
 # https://esphome.io/components/ota.html
 ota:
   - platform: web_server
+    id: kauf_web_server_ota
     on_error:
       - button.press: restart_button
   - platform: esphome
+    id: kauf_esphome_ota
     on_error:
       - button.press: restart_button
 
